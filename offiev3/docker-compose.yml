@@ -1,0 +1,153 @@
+# ==============================================================================
+# Docker Compose officev3: Web + MongoDB phân mảnh (config server, 3 shard, mongos)
+# Chạy: cp .env.docker .env   (đổi MONGO_ROOT_PASSWORD trước)
+#       docker compose up -d --build
+# Thiết kế: docs/THIET_KE_MONGODB.md
+# ==============================================================================
+x-mongo-env: &mongo-env
+  MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+  MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Dat MONGO_ROOT_PASSWORD trong .env}
+
+services:
+  # 1. Sinh keyfile dùng chung cho xác thực nội bộ cụm (chạy một lần).
+  mongo-keygen:
+    image: mongo:7.0
+    container_name: office_mongo_keygen
+    user: "0:0"
+    restart: "no"
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["openssl rand -base64 756 > /keyfile/keyfile && chown 999:999 /keyfile/keyfile && chmod 400 /keyfile/keyfile && echo keyfile tao xong"]
+    volumes:
+      - mongo_keyfile:/keyfile
+
+  # 2. Config server: lưu metadata sharding (replica set cfgRS).
+  mongo-config:
+    image: mongo:7.0
+    container_name: office_mongo_config
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/docker/mongo-node.sh", "config"]
+    environment: *mongo-env
+    volumes:
+      - mongo_config_data:/data/db
+      - mongo_keyfile:/etc/mongo:ro
+      - ./docker/mongo-node.sh:/docker/mongo-node.sh:ro
+    depends_on:
+      mongo-keygen:
+        condition: service_completed_successfully
+
+  # 3. Ba shard, mỗi shard giữ một zone = một tòa nhà (TN01, TN02, TN03).
+  mongo-shard1:
+    image: mongo:7.0
+    container_name: office_mongo_shard1
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/docker/mongo-node.sh", "shard1"]
+    environment: *mongo-env
+    volumes:
+      - mongo_shard1_data:/data/db
+      - mongo_keyfile:/etc/mongo:ro
+      - ./docker/mongo-node.sh:/docker/mongo-node.sh:ro
+    depends_on:
+      mongo-keygen:
+        condition: service_completed_successfully
+
+  mongo-shard2:
+    image: mongo:7.0
+    container_name: office_mongo_shard2
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/docker/mongo-node.sh", "shard2"]
+    environment: *mongo-env
+    volumes:
+      - mongo_shard2_data:/data/db
+      - mongo_keyfile:/etc/mongo:ro
+      - ./docker/mongo-node.sh:/docker/mongo-node.sh:ro
+    depends_on:
+      mongo-keygen:
+        condition: service_completed_successfully
+
+  mongo-shard3:
+    image: mongo:7.0
+    container_name: office_mongo_shard3
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/docker/mongo-node.sh", "shard3"]
+    environment: *mongo-env
+    volumes:
+      - mongo_shard3_data:/data/db
+      - mongo_keyfile:/etc/mongo:ro
+      - ./docker/mongo-node.sh:/docker/mongo-node.sh:ro
+    depends_on:
+      mongo-keygen:
+        condition: service_completed_successfully
+
+  # 4. Router mongos: ứng dụng và Compass kết nối vào cổng MONGO_PORT (mặc định 27017).
+  mongos:
+    image: mongo:7.0
+    container_name: office_mongos
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/docker/mongo-node.sh", "mongos"]
+    environment: *mongo-env
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo_keyfile:/etc/mongo:ro
+      - ./docker/mongo-node.sh:/docker/mongo-node.sh:ro
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/mongo-cluster-ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+    depends_on:
+      mongo-config:
+        condition: service_started
+      mongo-shard1:
+        condition: service_started
+      mongo-shard2:
+        condition: service_started
+      mongo-shard3:
+        condition: service_started
+
+  # 5. Nạp dữ liệu mẫu (database/seed/seed.js) qua mongos, một lần.
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: office_db_init
+    restart: "no"
+    command: ["node", "database/seed/seed.js"]
+    environment:
+      - MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD}@mongos:27017/?authSource=admin
+      - MONGO_DATABASE=QuanLyToaNha
+    depends_on:
+      mongos:
+        condition: service_healthy
+
+  # 6. Ứng dụng web (Node.js 22 + Express + SPA).
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: office_web_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATA_MODE=mongo
+      - MONGO_URI=mongodb://${MONGO_ROOT_USERNAME:-admin}:${MONGO_ROOT_PASSWORD}@mongos:27017/?authSource=admin
+      - MONGO_DATABASE=QuanLyToaNha
+
+volumes:
+  mongo_keyfile:
+    driver: local
+  mongo_config_data:
+    driver: local
+  mongo_shard1_data:
+    driver: local
+  mongo_shard2_data:
+    driver: local
+  mongo_shard3_data:
+    driver: local

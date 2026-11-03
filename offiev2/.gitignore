@@ -1,0 +1,20 @@
+# Dependencies cài cục bộ
+node_modules/
+
+# Bí mật và dữ liệu SQL Server local
+.env
+.env.*
+!.env.example
+!.env.docker
+*.bak
+*.mdf
+*.ldf
+*.log
+data/local-db.json
+
+
+.agents/
+.plans/
+
+# TV6 sửa: chỉ số kế hoạch AgentKit tạo cục bộ trong workspace, không đưa lên Git.
+.agentkit/
