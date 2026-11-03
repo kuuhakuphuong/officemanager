@@ -41,12 +41,11 @@ test("TV5 triggers and office status on an isolated SQL Server database", { skip
     sandbox = new sql.ConnectionPool({ ...config, database: name, pool: { max: 1, min: 1 } });
     await sandbox.connect();
 
-    await runBatches(sandbox, path.join(tv3, "01_CreateSchema.sql"), name, 3);
-    await runBatches(sandbox, path.join(tv3, "02_InsertSeedData.sql"), name, 1);
-    // TV6 sửa: bộ Validate của TV3 kiểm tra schema/seed trước khi thêm nghiệp vụ trigger TV5.
-    await runBatches(sandbox, path.join(tv3, "03_Validate.sql"), name, 1);
-    await runBatches(sandbox, path.join(tv5, "05_Phan5_Triggers.sql"), name);
-    const results = await runBatches(sandbox, path.join(tv5, "05_Phan5_KiemThu.sql"), name);
+    await runBatches(sandbox, path.join(tv3, "01_CreateSchema_TV3_NguyenThiLanAnh.sql"), name, 3);
+    await runBatches(sandbox, path.join(tv3, "02_InsertSeedData_TV3_NguyenThiLanAnh.sql"), name, 1);
+    await runBatches(sandbox, path.join(tv3, "03_Validate_TV3_NguyenThiLanAnh.sql"), name, 1);
+    await runBatches(sandbox, path.join(tv5, "05_Phan5_Triggers_TV5_KhucTuanAnh.sql"), name);
+    const results = await runBatches(sandbox, path.join(tv5, "05_Phan5_KiemThu_TV5_KhucTuanAnh.sql"), name);
     const cases = results.filter((message) => /\b5\.[1-5]-TC\d+\s+(?:PASS|FAIL):/.test(message));
     t.diagnostic(`TV5 cases: ${cases.length}; failures: ${cases.filter((message) => /\bFAIL:/.test(message)).length}`);
     assert.ok(cases.length >= 19, "TV5 test cases did not produce the expected results");

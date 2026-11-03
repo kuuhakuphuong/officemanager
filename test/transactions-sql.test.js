@@ -32,21 +32,21 @@ test("TV4 web adapter runs against TV3 schema with TV5 triggers on an isolated d
     created = true;
     sandbox = new sql.ConnectionPool({ ...config, database: name, pool: { max: 1, min: 1 } });
     await sandbox.connect();
-    await runSql(sandbox, "database/schema/01_CreateSchema.sql", name, 3);
-    await runSql(sandbox, "database/schema/02_InsertSeedData.sql", name, 1);
+    await runSql(sandbox, "database/schema/01_CreateSchema_TV3_NguyenThiLanAnh.sql", name, 3);
+    await runSql(sandbox, "database/schema/02_InsertSeedData_TV3_NguyenThiLanAnh.sql", name, 1);
     // Migration thống nhất chạy an toàn trên schema 18 bảng
     for (let pass = 0; pass < 2; pass++)
-      await runSql(sandbox, "database/schema/06_ThongNhatQuyTac.sql", name);
+      await runSql(sandbox, "database/schema/06_ThongNhatQuyTac_TV3_NguyenThiLanAnh.sql", name);
     assert.equal((await sandbox.request().query(`SELECT COUNT(*) AS total FROM sys.check_constraints
       WHERE name IN ('CK_HopDongThue_Ngay','CK_SuDungDichVu_Ngay','CK_NhanVienCongTy_NgayNghi','CK_DichVu_DonGia')
         AND is_disabled = 0 AND is_not_trusted = 0`)).recordset[0].total, 4);
-    await runSql(sandbox, "database/triggers/05_Phan5_Triggers.sql", name);
+    await runSql(sandbox, "database/triggers/05_Phan5_Triggers_TV5_KhucTuanAnh.sql", name);
     store = new SqlStore({ ...config, database: name });
     assert.equal((await store.health()).transactionsReady, false);
     assert.equal((await store.health()).paymentReady, false);
-    await runSql(sandbox, "database/transactions/02_KiemTraTuongThich.sql", name);
-    await runSql(sandbox, "database/transactions/00_TaoKieuDuLieu.sql", name);
-    await runSql(sandbox, "database/transactions/03_Transactions.sql", name);
+    await runSql(sandbox, "database/transactions/02_KiemTraTuongThich_TV4_VuTrungHieu.sql", name);
+    await runSql(sandbox, "database/transactions/00_TaoKieuDuLieu_TV4_VuTrungHieu.sql", name);
+    await runSql(sandbox, "database/transactions/03_Transactions_TV4_VuTrungHieu.sql", name);
     assert.equal((await sandbox.request().query("SELECT COUNT(*) AS total FROM sys.triggers WHERE name LIKE 'TR_%'")).recordset[0].total >= 6, true);
     assert.equal((await store.health()).transactionsReady, true);
     assert.equal((await store.health()).paymentReady, true);

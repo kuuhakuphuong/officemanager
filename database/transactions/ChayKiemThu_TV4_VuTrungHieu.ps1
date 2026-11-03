@@ -23,17 +23,18 @@ function Save-Sql([string]$name,[string]$text) {
 $guard = Save-Sql '00_Guard.sql' "IF DB_ID(N'$Database') IS NOT NULL THROW 59800,N'Database test da ton tai. Hay doi -Database sang ten moi.',1;"
 Run-Sql $guard 'master'
 # TV6 sửa: runner dùng nguồn TV3 chuẩn và cài TV5 trước TV4; NguonTV3 chỉ là bản sao lịch sử.
-$projectRoot = Split-Path $PSScriptRoot -Parent
-$tv3 = Join-Path $projectRoot 'Phần của thành viên 3\BCNF_BanGiao'
-foreach ($name in @('01_CreateSchema.sql','02_InsertSeedData.sql','03_Validate.sql')) {
- $source=Join-Path $tv3 $name
+$dbRoot = Split-Path $PSScriptRoot -Parent
+$schemaPath = Join-Path $dbRoot 'schema'
+$triggersPath = Join-Path $dbRoot 'triggers'
+foreach ($name in @('01_CreateSchema_TV3_NguyenThiLanAnh.sql','02_InsertSeedData_TV3_NguyenThiLanAnh.sql','03_Validate_TV3_NguyenThiLanAnh.sql')) {
+ $source=Join-Path $schemaPath $name
  $text=[System.IO.File]::ReadAllText($source).Replace('QLToaNha_BCNF',$Database)
  $file=Save-Sql $name $text
  Run-Sql $file 'master'
 }
-Run-Sql (Join-Path $projectRoot 'Phần của thành viên 5\05_Phan5_Triggers.sql')
-foreach ($name in @('02_KiemTraTuongThich.sql','00_TaoKieuDuLieu.sql',
- '03_Transactions.sql','04_KiemThu.sql','06_DoiChieuSeed.sql')) {
+Run-Sql (Join-Path $triggersPath '05_Phan5_Triggers_TV5_KhucTuanAnh.sql')
+foreach ($name in @('02_KiemTraTuongThich_TV4_VuTrungHieu.sql','00_TaoKieuDuLieu_TV4_VuTrungHieu.sql',
+ '03_Transactions_TV4_VuTrungHieu.sql','04_KiemThu_TV4_VuTrungHieu.sql','06_DoiChieuSeed_TV4_VuTrungHieu.sql')) {
  Run-Sql (Join-Path $PSScriptRoot $name)
 }
 if ($DongThoi) {

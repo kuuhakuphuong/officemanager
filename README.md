@@ -10,37 +10,37 @@ Toàn bộ tài nguyên phục vụ chạy Web và Cơ sở dữ liệu đã đ�
 
 ```text
 OfficeBuilding_Web_DB/
-├── assets/                     # Giao diện Web SPA (JavaScript, CSS)
-├── database/                   # Toàn bộ mã nguồn CSDL đã được phân loại chuẩn hóa
-│   ├── schema/                 # DDL 18 bảng BCNF, Dữ liệu mẫu (Seed) và Validate
-│   │   ├── 01_CreateSchema.sql
-│   │   ├── 02_InsertSeedData.sql
-│   │   ├── 03_Validate.sql
-│   │   └── 06_ThongNhatQuyTac.sql
-│   ├── triggers/               # 6 Triggers T-SQL nghiệp vụ và kịch bản kiểm thử
-│   │   ├── 05_Phan5_Triggers.sql
-│   │   └── 05_Phan5_KiemThu.sql
-│   ├── transactions/           # 5 Stored Procedures ACID, Table Types và Runner
-│   │   ├── 00_TaoKieuDuLieu.sql
-│   │   ├── 02_KiemTraTuongThich.sql
-│   │   ├── 03_Transactions.sql
-│   │   ├── 04_KiemThu.sql
-│   │   ├── 05_KiemThu_DongThoi.sql
-│   │   ├── 06_DoiChieuSeed.sql
-│   │   └── ChayKiemThu.ps1
-│   ├── distributed/            # Kịch bản CSDL Phân tán 3 Site độc lập
-│   │   ├── 01_NapDB_Site1_TrungTam.sql
-│   │   ├── 02_NapDB_Site2_ChiNhanh2.sql
-│   │   ├── 03_NapDB_Site3_ChiNhanh3.sql
-│   │   └── 04_TruyVan_PhanManh_TaiThiet.sql
-│   └── nosql/                  # CSDL NoSQL MongoDB và kịch bản Aggregation
-│       ├── 05_DuLieu_MongoDB.json
-│       └── 06_MongoDB.js
-├── docker/                     # Script tự động hóa khởi tạo CSDL trong container
+├── assets/                     # Giao diện Web SPA (TV6 - Vũ Thành Phong)
+├── database/                   # Toàn bộ mã nguồn CSDL đã được gắn tên từng thành viên
+│   ├── schema/                 # DDL 18 bảng BCNF, Seed 2 tháng (TV3 - Nguyễn Thị Lan Anh)
+│   │   ├── 01_CreateSchema_TV3_NguyenThiLanAnh.sql
+│   │   ├── 02_InsertSeedData_TV3_NguyenThiLanAnh.sql
+│   │   ├── 03_Validate_TV3_NguyenThiLanAnh.sql
+│   │   └── 06_ThongNhatQuyTac_TV3_NguyenThiLanAnh.sql
+│   ├── triggers/               # 6 Triggers T-SQL nghiệp vụ & test (TV5 - Khúc Tuấn Anh)
+│   │   ├── 05_Phan5_Triggers_TV5_KhucTuanAnh.sql
+│   │   └── 05_Phan5_KiemThu_TV5_KhucTuanAnh.sql
+│   ├── transactions/           # 5 Stored Procedures ACID & Type (TV4 - Vũ Trung Hiếu)
+│   │   ├── 00_TaoKieuDuLieu_TV4_VuTrungHieu.sql
+│   │   ├── 02_KiemTraTuongThich_TV4_VuTrungHieu.sql
+│   │   ├── 03_Transactions_TV4_VuTrungHieu.sql
+│   │   ├── 04_KiemThu_TV4_VuTrungHieu.sql
+│   │   ├── 05_KiemThu_DongThoi_TV4_VuTrungHieu.sql
+│   │   ├── 06_DoiChieuSeed_TV4_VuTrungHieu.sql
+│   │   └── ChayKiemThu_TV4_VuTrungHieu.ps1
+│   ├── distributed/            # CSDL Phân tán 3 Site độc lập (TV7 - Bùi Đoàn Quang Huy)
+│   │   ├── 01_NapDB_Site1_TrungTam_TV7_BuiDoanQuangHuy.sql
+│   │   ├── 02_NapDB_Site2_ChiNhanh2_TV7_BuiDoanQuangHuy.sql
+│   │   ├── 03_NapDB_Site3_ChiNhanh3_TV7_BuiDoanQuangHuy.sql
+│   │   └── 04_TruyVan_PhanManh_TaiThiet_TV7_BuiDoanQuangHuy.sql
+│   └── nosql/                  # CSDL NoSQL MongoDB & Aggregation (TV7 - Bùi Đoàn Quang Huy)
+│       ├── 05_DuLieu_MongoDB_TV7_BuiDoanQuangHuy.json
+│       └── 06_MongoDB_TV7_BuiDoanQuangHuy.js
+├── docker/                     # Tự động hóa Docker Linux (TV6 - Vũ Thành Phong)
 │   ├── init-db.sh              # Script nạp tự động SQL Server (chuẩn LF Linux)
 │   └── init-mongo.js           # Script nạp tự động MongoDB
-├── server/                     # Backend ExpressJS, Data Store, API & Transaction Handlers
-├── test/                       # Bộ kiểm thử tự động (Unit & Integration Tests)
+├── server/                     # Backend ExpressJS, Data Store, API (TV6 - Vũ Thành Phong)
+├── test/                       # Bộ kiểm thử tự động 16 test cases
 ├── Dockerfile                  # Đóng gói Web App (Node 22 Alpine)
 ├── docker-compose.yml          # Cấu hình cụm dịch vụ Web + SQL Server + MongoDB
 ├── .dockerignore               # Bỏ qua node_modules, log, file thừa khi build
@@ -55,7 +55,21 @@ OfficeBuilding_Web_DB/
 
 ---
 
-## 2. Các phương thức triển khai & Khởi chạy
+## 2. Bảng phân công vai trò & File phụ trách của từng Thành viên
+
+| Thành viên | Vai trò nghiệp vụ | Tệp mã nguồn phụ trách trực tiếp |
+| :--- | :--- | :--- |
+| **TV1: Lưu Văn Phương** | BA & Phân tích yêu cầu, Mô hình ERD | Đặc tả nghiệp vụ gốc, quy tắc mô hình 18 bảng BCNF |
+| **TV2: Phạm Văn Lân** | Chuẩn hóa BCNF & Phụ thuộc hàm | Chứng minh toán học BCNF, thuật toán bao đóng, tách bảng `ChiTietHoaDon` |
+| **TV3: Nguyễn Thị Lan Anh** | DBA / DDL & Dữ liệu lớn Seed 2 tháng | `database/schema/01_CreateSchema_TV3_NguyenThiLanAnh.sql`<br>`database/schema/02_InsertSeedData_TV3_NguyenThiLanAnh.sql`<br>`database/schema/03_Validate_TV3_NguyenThiLanAnh.sql`<br>`database/schema/06_ThongNhatQuyTac_TV3_NguyenThiLanAnh.sql` |
+| **TV4: Vũ Trung Hiếu** | Senior Transactions ACID & SP | `database/transactions/00_TaoKieuDuLieu_TV4_VuTrungHieu.sql`<br>`database/transactions/02_KiemTraTuongThich_TV4_VuTrungHieu.sql`<br>`database/transactions/03_Transactions_TV4_VuTrungHieu.sql`<br>`database/transactions/04_KiemThu_TV4_VuTrungHieu.sql`<br>`database/transactions/05_KiemThu_DongThoi_TV4_VuTrungHieu.sql`<br>`database/transactions/06_DoiChieuSeed_TV4_VuTrungHieu.sql`<br>`database/transactions/ChayKiemThu_TV4_VuTrungHieu.ps1` |
+| **TV5: Khúc Tuấn Anh** | Triggers T-SQL & Ràng buộc toàn vẹn | `database/triggers/05_Phan5_Triggers_TV5_KhucTuanAnh.sql`<br>`database/triggers/05_Phan5_KiemThu_TV5_KhucTuanAnh.sql` |
+| **TV6: Vũ Thành Phong** | Web Fullstack, API & Tự động hóa Docker | `server/` (Backend ExpressJS, SQL Store, Transactions)<br>`assets/` (Web SPA Dashboard & CRUD)<br>`Dockerfile`, `docker-compose.yml`, `docker/init-db.sh`, `docker/init-mongo.js`<br>`test/` (Bộ kiểm thử tự động 16 test cases) |
+| **TV7: Bùi Đoàn Quang Huy** | CSDL Phân tán 3 Site & NoSQL MongoDB | `database/distributed/01_NapDB_Site1_TrungTam_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/02_NapDB_Site2_ChiNhanh2_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/03_NapDB_Site3_ChiNhanh3_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/04_TruyVan_PhanManh_TaiThiet_TV7_BuiDoanQuangHuy.sql`<br>`database/nosql/05_DuLieu_MongoDB_TV7_BuiDoanQuangHuy.json`<br>`database/nosql/06_MongoDB_TV7_BuiDoanQuangHuy.js` |
+
+---
+
+## 3. Các phương thức triển khai & Khởi chạy
 
 ### Cách 1: Triển khai bằng Docker Compose (Khuyến nghị trên Linux/Server)
 
@@ -93,11 +107,11 @@ Mở trình duyệt: `http://localhost:3000`.
 ### Cách 3: Chạy cục bộ bằng Node.js kết nối SQL Server
 
 1. Nạp các file SQL trong thư mục `database/` theo thứ tự:
-   - `database/schema/01_CreateSchema.sql`
-   - `database/schema/02_InsertSeedData.sql`
-   - `database/triggers/05_Phan5_Triggers.sql`
-   - `database/transactions/00_TaoKieuDuLieu.sql`
-   - `database/transactions/03_Transactions.sql`
+   - `database/schema/01_CreateSchema_TV3_NguyenThiLanAnh.sql`
+   - `database/schema/02_InsertSeedData_TV3_NguyenThiLanAnh.sql`
+   - `database/triggers/05_Phan5_Triggers_TV5_KhucTuanAnh.sql`
+   - `database/transactions/00_TaoKieuDuLieu_TV4_VuTrungHieu.sql`
+   - `database/transactions/03_Transactions_TV4_VuTrungHieu.sql`
 2. Tạo file `.env` từ `.env.example`, đặt `DATA_MODE=sqlserver` và điền thông tin kết nối SQL Server.
 3. Chạy ứng dụng:
    ```bash
@@ -107,7 +121,7 @@ Mở trình duyệt: `http://localhost:3000`.
 
 ---
 
-## 3. Kiểm tra chất lượng mã nguồn (Code Quality & Testing)
+## 4. Kiểm tra chất lượng mã nguồn (Code Quality & Testing)
 
 ```bash
 # Kiểm tra cú pháp toàn bộ file JavaScript
@@ -119,7 +133,7 @@ npm test
 
 ---
 
-## 4. Hướng dẫn khởi tạo và Push lên GitHub mới
+## 5. Hướng dẫn Push lên GitHub mới
 
 Để đưa toàn bộ thư mục sạch này lên một repository mới trên GitHub:
 

@@ -48,16 +48,16 @@ fi
 
 echo "[INFO] Bat dau qua trinh khoi tao CSDL 18 bang BCNF..."
 
-F_SCHEMA="/app/database/schema/01_CreateSchema.sql"
-F_SEED="/app/database/schema/02_InsertSeedData.sql"
-F_VALIDATE="/app/database/schema/03_Validate.sql"
-F_TRIGGERS="/app/database/triggers/05_Phan5_Triggers.sql"
-F_TYPES="/app/database/transactions/00_TaoKieuDuLieu.sql"
-F_TRANS="/app/database/transactions/03_Transactions.sql"
+F_SCHEMA="/app/database/schema/01_CreateSchema_TV3_NguyenThiLanAnh.sql"
+F_SEED="/app/database/schema/02_InsertSeedData_TV3_NguyenThiLanAnh.sql"
+F_VALIDATE="/app/database/schema/03_Validate_TV3_NguyenThiLanAnh.sql"
+F_TRIGGERS="/app/database/triggers/05_Phan5_Triggers_TV5_KhucTuanAnh.sql"
+F_TYPES="/app/database/transactions/00_TaoKieuDuLieu_TV4_VuTrungHieu.sql"
+F_TRANS="/app/database/transactions/03_Transactions_TV4_VuTrungHieu.sql"
 
-F_SITE1="/app/database/distributed/01_NapDB_Site1_TrungTam.sql"
-F_SITE2="/app/database/distributed/02_NapDB_Site2_ChiNhanh2.sql"
-F_SITE3="/app/database/distributed/03_NapDB_Site3_ChiNhanh3.sql"
+F_SITE1="/app/database/distributed/01_NapDB_Site1_TrungTam_TV7_BuiDoanQuangHuy.sql"
+F_SITE2="/app/database/distributed/02_NapDB_Site2_ChiNhanh2_TV7_BuiDoanQuangHuy.sql"
+F_SITE3="/app/database/distributed/03_NapDB_Site3_ChiNhanh3_TV7_BuiDoanQuangHuy.sql"
 
 echo "1/7 [TV3] Tao CSDL & 18 bang BCNF: $F_SCHEMA"
 $SQLCMD -S "$DB_SERVER,$DB_PORT" -U sa -P "$MSSQL_SA_PASSWORD" -C -i "$F_SCHEMA"
