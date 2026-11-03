@@ -9,6 +9,7 @@ const { runTransaction } = require("./mongo/transactions");
 const { validateRecord } = require("./crud-schema");
 const { validateTransaction, transactionNames } = require("./validation");
 const { ValidationError } = require("./errors");
+const { filterRows } = require("../assets/search");
 
 const projectRoot = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 3000);
@@ -73,8 +74,12 @@ app.get("/api/lookups", async (_, response, next) => {
 });
 
 for (const collection of collections) {
-  app.get(`/api/${collection}`, async (_, response, next) => {
-    try { return response.json(await (mongoStore ? (await mongo()).list(collection) : store.list(collection))); } catch (error) { return next(error); }
+  app.get(`/api/${collection}`, async (request, response, next) => {
+    try {
+      // Lọc trong DB cho các điều kiện bằng nhau (có chỉ mục); phần còn lại lọc trong bộ nhớ.
+      const rows = await (mongoStore ? (await mongo()).list(collection, request.query) : store.list(collection));
+      return response.json(filterRows(collection, rows, request.query));
+    } catch (error) { return next(error); }
   });
   app.post(`/api/${collection}`, async (request, response, next) => {
     try {

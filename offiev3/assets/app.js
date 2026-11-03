@@ -99,7 +99,11 @@
     if (sidebarStatus) sidebarStatus.textContent = sqlMode ? "MongoDB · Shard" : "Chế độ cục bộ";
   }).catch(() => {}) : Promise.resolve();
   const gateway = {
-    async list(entity) { return config.apiBase ? request(`/${entity}`) : local.list(entity); },
+    async list(entity, params = {}) {
+      const qs = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== "" && value !== undefined && value !== null));
+      const rows = config.apiBase ? await request(`/${entity}${qs.toString() ? `?${qs}` : ""}`) : await local.list(entity);
+      return searchUtils.filterRows(entity, rows, params);
+    },
     async save(entity, record) { if (!config.apiBase) return local.save(entity, record); const { id, ...fields } = record; return id ? request(`/${entity}/${id}`, { method: "PUT", body: JSON.stringify(fields) }) : request(`/${entity}`, { method: "POST", body: JSON.stringify(fields) }); },
     async remove(entity, id) { if (!config.apiBase) return local.remove(entity, id); return request(`/${entity}/${id}`, { method: "DELETE" }); }
   };
@@ -196,16 +200,56 @@
       if (manager.selectedOptions?.[0]?.disabled) manager.value = "";
     }
   }
+  // Trạng thái tìm kiếm/lọc theo từng danh mục (giữ khi thêm, sửa, xóa).
+  const crudQuery = {};
+  // Trường tìm kiếm: [tên tham số, nhãn, nguồn lựa chọn]. Không có nguồn = ô nhập chữ.
+  const crudSearchFields = {
+    companies: [["q", "Tìm theo tên, mã số thuế, mã"], ["sector", "Lĩnh vực", "sectors"]],
+    offices: [["q", "Tìm theo mã văn phòng"], ["buildingId", "Tòa nhà", "buildings"], ["locationId", "Vị trí", "locations"], ["status", "Trạng thái", "statuses"]],
+    contracts: [["q", "Tìm theo mã HĐ, công ty, văn phòng"], ["companyId", "Công ty", "companies"], ["officeId", "Văn phòng", "offices"], ["active", "Hiệu lực", "activeStates"]],
+    services: [["q", "Tìm theo mã, tên dịch vụ"], ["buildingId", "Tòa nhà", "buildings"], ["serviceTypeId", "Loại dịch vụ", "serviceTypes"]],
+    employees: [["q", "Tìm theo mã, họ tên, email"], ["type", "Thuộc", "employeeKinds"], ["companyId", "Công ty", "companies"], ["buildingId", "Tòa nhà", "buildings"], ["employeeType", "Loại NV", "employeeTypes"]]
+  };
+  const staticOptions = {
+    statuses: [["TRONG", "Trống"], ["DANG_THUE", "Đang thuê"]],
+    activeStates: [["1", "Đang hiệu lực"], ["0", "Đã kết thúc"]],
+    employeeKinds: [["company", "Công ty"], ["building", "Tòa nhà"]],
+    employeeTypes: [["QUAN_LY", "Quản lý"], ["DICH_VU", "Nhân viên dịch vụ"]]
+  };
+  function crudSearchMarkup(entity, params, lookups, rows) {
+    const optionsOf = (source) => staticOptions[source] || (source === "sectors"
+      ? [...new Set(rows.map((row) => row.sector).filter(Boolean))].sort().map((value) => [value, value])
+      : (lookups[source] || []).map((choice) => [choice.id, choice.name]));
+    const fields = crudSearchFields[entity].map(([name, label, source]) => source
+      ? `<label class="field">${escape(label)}<select name="${name}"><option value="">Tất cả</option>${optionsOf(source).map(([value, text]) => `<option value="${escape(value)}" ${String(params[name] ?? "") === String(value) ? "selected" : ""}>${escape(text)}</option>`).join("")}</select></label>`
+      : `<label class="field">${escape(label)}<input name="${name}" value="${escape(params[name] || "")}" placeholder="${escape(label)}"></label>`).join("");
+    return `<form class="card filters" data-crud-search="${entity}">${fields}<div class="form-actions"><button class="button primary" type="submit">Tìm / lọc</button><button class="button secondary" type="button" data-crud-reset="${entity}">Xóa lọc</button></div></form>`;
+  }
+  // Xuất một hồ sơ (hợp đồng hoặc nhân viên) ra file Word (.doc) có thể mở và in.
+  function exportRecordDoc(entity, record) {
+    const value = (v) => escape(v === null || v === undefined || v === "" ? "—" : String(v));
+    const isContract = entity === "contracts";
+    const title = isContract ? "HỢP ĐỒNG THUÊ VĂN PHÒNG" : "HỒ SƠ NHÂN VIÊN";
+    const pairs = isContract
+      ? [["Mã hợp đồng", record.code], ["Công ty", record.company], ["Mã công ty", record.companyId], ["Văn phòng", record.officeId], ["Ngày bắt đầu", record.startDate], ["Ngày kết thúc", record.endDate || "Không xác định"]]
+      : [["Mã nhân viên", record.code], ["Họ và tên", record.name], ["Thuộc", record.type === "company" ? "Công ty" : "Tòa nhà"], ["Công ty", record.company], ["Tòa nhà", record.building], ["Loại nhân viên", record.employeeType], ["Chức vụ", record.jobTitle], ["Giới tính", record.gender], ["Ngày sinh", record.birthDate], ["Điện thoại", record.phone], ["Email", record.email], ["Ngày vào làm", record.startDate], ["Ngày nghỉ việc", record.endDate]];
+    const rows = pairs.map(([label, data]) => `<tr><th style="text-align:left;width:35%">${escape(label)}</th><td>${value(data)}</td></tr>`).join("");
+    const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${title}</title></head><body style="font-family:'Times New Roman';font-size:13pt"><h2 style="text-align:center">${title}</h2><p style="text-align:center">Mã: ${value(record.code)}</p><table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%">${rows}</table><p>Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}</p></body></html>`;
+    const url = URL.createObjectURL(new Blob(["﻿" + html], { type: "application/msword" }));
+    const link = document.createElement("a"); link.href = url; link.download = `${isContract ? "hop-dong" : "nhan-vien"}-${record.code}.doc`; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); notify("Đã xuất file.");
+  }
   async function renderCrud(entity) {
     const schema = schemas[entity];
-    const [rows, lookups] = await Promise.all([gateway.list(entity), config.apiBase ? request("/lookups") : Promise.resolve({})]);
+    const params = crudQuery[entity] || {};
+    const [rows, lookups] = await Promise.all([gateway.list(entity, params), config.apiBase ? request("/lookups") : Promise.resolve({})]);
     const draft = editing?.entity === entity ? editing.record : {};
     setHeading(schema.title, "QUẢN LÝ DỮ LIỆU");
     const inputs = schema.fields.map((field) => fieldMarkup(field, draft, lookups)).join("");
     const employeeInputs = entity === "employees" ?
       `<div data-employee-group="company">${[["companyId", "Công ty", "companies"], ["jobTitle", "Chức vụ"], ["endDate", "Ngày nghỉ việc", "date", false]].map((field) => fieldMarkup(field, draft, lookups)).join("")}</div>` +
       `<div data-employee-group="building">${[["buildingId", "Tòa nhà", "buildings"], ["employeeType", "Loại nhân viên", "employeeTypes"], ["managerId", "Quản lý trực tiếp", "managers", false]].map((field) => fieldMarkup(field, draft, lookups)).join("")}</div>` : "";
-    main.innerHTML = `${pageHeader(`Quản lý ${schema.title.toLowerCase()}`, "Dữ liệu theo các cột và khóa ngoại trong lược đồ BCNF.")}<section class="card section"><h3>${draft.id ? "Cập nhật bản ghi" : `Thêm ${schema.title.toLowerCase()}`}</h3><form id="crud-form" data-entity="${entity}" class="form-grid">${inputs}${employeeInputs}<div class="form-actions"><button class="button primary" type="submit">${draft.id ? "Lưu thay đổi" : "Thêm mới"}</button>${draft.id ? '<button class="button secondary" data-cancel-edit type="button">Hủy</button>' : ""}</div></form></section><section class="card section" style="margin-top:16px"><div class="toolbar"><h3>Danh sách (${rows.length})</h3></div>${table(schema.columns, rows, (row) => `<button class="text-button" data-edit="${entity}" data-id="${escape(row.id)}">Sửa</button><button class="text-button delete" data-delete="${entity}" data-id="${escape(row.id)}">Xóa</button>`)}</section>`;
+    main.innerHTML = `${pageHeader(`Quản lý ${schema.title.toLowerCase()}`, "Dữ liệu theo các cột và khóa ngoại trong lược đồ BCNF.")}<section class="card section"><h3>${draft.id ? "Cập nhật bản ghi" : `Thêm ${schema.title.toLowerCase()}`}</h3><form id="crud-form" data-entity="${entity}" class="form-grid">${inputs}${employeeInputs}<div class="form-actions"><button class="button primary" type="submit">${draft.id ? "Lưu thay đổi" : "Thêm mới"}</button>${draft.id ? '<button class="button secondary" data-cancel-edit type="button">Hủy</button>' : ""}</div></form></section>${crudSearchMarkup(entity, params, lookups, rows)}<section class="card section" style="margin-top:16px"><div class="toolbar"><h3>Danh sách (${rows.length})</h3></div>${table(schema.columns, rows, (row) => `${entity === "contracts" || entity === "employees" ? `<button class="text-button" data-export-record="${entity}" data-id="${escape(row.id)}">Xuất file</button>` : ""}<button class="text-button" data-edit="${entity}" data-id="${escape(row.id)}">Sửa</button><button class="text-button delete" data-delete="${entity}" data-id="${escape(row.id)}">Xóa</button>`)}</section>`;
     if (entity === "employees") syncEmployeeFields(main.querySelector("#crud-form"));
   }
   function transactionSelect(name, label, choices) {
@@ -360,6 +404,13 @@
     if (target.dataset.route) { route = target.dataset.route; location.hash = route; return; }
     if (target.id === "menu-toggle") { const sidebar = document.querySelector(".sidebar"); sidebar.classList.toggle("open"); target.setAttribute("aria-expanded", String(sidebar.classList.contains("open"))); return; }
     if (target.dataset.cancelEdit !== undefined) { editing = null; return render(); }
+    if (target.dataset.crudReset) { crudQuery[target.dataset.crudReset] = {}; return render(); }
+    if (target.dataset.exportRecord) {
+      const rows = await gateway.list(target.dataset.exportRecord);
+      const record = rows.find((row) => row.id === target.dataset.id);
+      if (record) exportRecordDoc(target.dataset.exportRecord, record);
+      return;
+    }
     if (target.dataset.edit) { const rows = await gateway.list(target.dataset.edit); editing = { entity: target.dataset.edit, record: rows.find((row) => row.id === target.dataset.id) }; return render(); }
     if (target.dataset.delete) { if (!confirm("Bạn có chắc muốn xóa bản ghi này?")) return; const restore = setButtonBusy(target, "Đang xóa…"); try { await gateway.remove(target.dataset.delete, target.dataset.id); reportLookups = null; notify("Đã xóa bản ghi."); await render(); } catch (error) { restore(); notify(explainError(error), true); } }
     if (target.dataset.export) exportCsv(target.dataset.export);
@@ -367,7 +418,9 @@
     if (target.dataset.batchAdd !== undefined) { const rows = target.previousElementSibling; if (rows.children.length < 200) rows.insertAdjacentHTML("beforeend", rows.firstElementChild.outerHTML); return; }
     if (target.dataset.batchRemove !== undefined) { const rows = target.closest("[data-batch]"); if (rows.children.length > 1) target.closest(".transaction-row").remove(); return; }
   });
-  document.addEventListener("submit", (event) => { if (event.target.id === "crud-form") { event.preventDefault(); submitCrud(event.target); } if (event.target.dataset.reportFilter) { event.preventDefault(); loadReport(event.target.dataset.reportFilter, event.target); } if (event.target.dataset.transaction) { event.preventDefault(); submitTransaction(event.target); } });
+  document.addEventListener("submit", (event) => {
+    if (event.target.dataset.crudSearch) { event.preventDefault(); crudQuery[event.target.dataset.crudSearch] = Object.fromEntries(new FormData(event.target).entries()); return render(); }
+    if (event.target.id === "crud-form") { event.preventDefault(); submitCrud(event.target); } if (event.target.dataset.reportFilter) { event.preventDefault(); loadReport(event.target.dataset.reportFilter, event.target); } if (event.target.dataset.transaction) { event.preventDefault(); submitTransaction(event.target); } });
   document.addEventListener("change", (event) => { const form = event.target.closest("#crud-form"); if (form?.dataset.entity === "employees") syncEmployeeFields(form); if (event.target.closest('[data-transaction="contract"]') && event.target.name === "buildingId") syncTransactionOffices();
     // TV6 sửa: đồng bộ số tiền chỉ đọc khi chọn hóa đơn chưa thanh toán.
     if (event.target.closest('[data-transaction="payment"]') && event.target.name === "invoiceId") event.target.form.elements.amount.value = event.target.selectedOptions[0]?.dataset.amount || "";

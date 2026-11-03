@@ -148,10 +148,12 @@ class MongoStore {
   }
 
   // Danh sách theo collection, giữ nguyên hình dạng như bản MySQL.
-  async list(collection) {
+  // params: bộ lọc từ query string. Các điều kiện bằng nhau và khoảng ngày được đẩy xuống DB (có chỉ mục);
+  // tìm chuỗi (q) và phần nhúng được lọc trong bộ nhớ ở tầng index.js.
+  async list(collection, params = {}) {
     const dir = await this.directory();
     if (collection === "companies") {
-      const rows = await this.col("congTy").find({}).sort({ _id: 1 }).toArray();
+      const rows = await this.col("congTy").find(companyQuery(params)).sort({ _id: 1 }).toArray();
       return rows.map((c) => ({ id: c._id, code: c._id, name: c.tenCongTy, taxCode: c.maSoThue, address: c.diaChi,
         phone: c.dienThoai, email: c.email, sector: c.linhVuc }));
     }
@@ -166,7 +168,7 @@ class MongoStore {
         status: active.has(v.maVanPhong) ? "DANG_THUE" : "TRONG" }))).sort((a, b) => a.code.localeCompare(b.code));
     }
     if (collection === "contracts") {
-      const rows = await this.col("hopDongThue").find({}).sort({ _id: 1 }).toArray();
+      const rows = await this.col("hopDongThue").find(contractQuery(params)).sort({ _id: 1 }).toArray();
       return rows.map((h) => ({ id: h.maHopDong, code: h.maHopDong, companyId: h.maCongTy,
         company: dir.companies.get(h.maCongTy)?.tenCongTy || "", officeId: h.maVanPhong,
         startDate: h.ngayBatDau, endDate: h.ngayKetThuc || null }));
@@ -178,7 +180,10 @@ class MongoStore {
         .sort((a, b) => a.code.localeCompare(b.code));
     }
     // employees: nhân viên công ty + nhân viên tòa nhà (nhúng trong tài liệu tòa nhà).
-    const companyStaff = (await this.col("nhanVienCongTy").find({}).sort({ _id: 1 }).toArray()).map((nv) => ({
+    // Nhân viên công ty không có tòa/loại nhân viên: bỏ qua khi lọc theo các trường chỉ có ở nhân viên tòa.
+    const includeCompany = (!params.type || params.type === "company") && !(params.buildingId || params.employeeType);
+    const companyRows = includeCompany ? await this.col("nhanVienCongTy").find(employeeQuery(params)).sort({ _id: 1 }).toArray() : [];
+    const companyStaff = companyRows.map((nv) => ({
       id: `CT:${nv._id}`, type: "company", code: nv._id, name: nv.hoTen, gender: nv.gioiTinh, birthDate: nv.ngaySinh,
       phone: nv.dienThoai, email: nv.email, startDate: nv.ngayVaoLam, endDate: nv.ngayNghiViec || null,
       companyId: nv.maCongTy, company: dir.companies.get(nv.maCongTy)?.tenCongTy || "", buildingId: null, building: "",
@@ -466,6 +471,19 @@ class MongoStore {
     return summarize(rows, { totalIncome, totalExpense, netCashflow: Math.round((totalIncome - totalExpense) * 100) / 100,
       entryCount: rows.length }, "date");
   }
+}
+
+// Điều kiện lọc trong DB. Chỉ dùng đúng các trường đã có chỉ mục (xem database/seed/seed.js).
+function companyQuery(p) { return p.sector ? { linhVuc: String(p.sector) } : {}; }
+function employeeQuery(p) { return p.companyId ? { maCongTy: String(p.companyId) } : {}; }
+function contractQuery(p) {
+  const and = [];
+  if (p.companyId) and.push({ maCongTy: String(p.companyId) });
+  if (p.officeId) and.push({ maVanPhong: String(p.officeId) });
+  const now = today();
+  if (p.active === "1") and.push({ ngayBatDau: { $lte: now }, $or: [{ ngayKetThuc: null }, { ngayKetThuc: { $gte: now } }] });
+  if (p.active === "0") and.push({ $or: [{ ngayBatDau: { $gt: now } }, { ngayKetThuc: { $lt: now } }] });
+  return and.length ? { $and: and } : {};
 }
 
 const CATEGORY = { THUE_VAN_PHONG: "Thuê văn phòng", DICH_VU_THANG: "Dịch vụ tháng", DICH_VU_LUOT: "Dịch vụ theo lượt" };

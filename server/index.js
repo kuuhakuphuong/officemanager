@@ -8,6 +8,7 @@ const { validateRecord } = require("./crud-schema");
 const { tv5Error } = require("./tv5-errors");
 const { executeTransaction, tv4Error, paymentMessage } = require("./transactions");
 const { getTv7Snapshot } = require("./tv7-read");
+const { registerSearchRoutes } = require("./search-routes");
 
 const projectRoot = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 3000);
@@ -15,6 +16,7 @@ const dataMode = process.env.DATA_MODE || "local";
 const store = new LocalStore(path.join(projectRoot, "data", "local-db.json"));
 const sqlStore = dataMode === "sqlserver" ? new SqlStore() : null;
 const app = express();
+registerSearchRoutes(app, sqlStore, store);
 
 if (!["local", "sqlserver"].includes(dataMode)) {
   throw new Error("DATA_MODE must be either local or sqlserver");

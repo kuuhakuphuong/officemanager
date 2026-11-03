@@ -241,6 +241,18 @@ async function load(uri, databaseName = "QuanLyToaNha") {
   await db.collection(COLLECTIONS.nhatKySuDung.name).createIndex({ maToaNha: 1, maNVCT: 1, maDichVu: 1, ngaySuDung: 1 }, { unique: true });
   await db.collection(COLLECTIONS.bangLuong.name).createIndex({ maToaNha: 1, maNVTN: 1, nam: 1, thang: 1 }, { unique: true });
 
+  // Chỉ mục cho tìm kiếm và lọc vận hành (không unique trên collection đã shard, trừ khi có khóa phân mảnh).
+  //  - cong_ty: lọc theo lĩnh vực.
+  //  - hop_dong_thue: lọc theo công ty + ngày bắt đầu (hiệu lực), theo văn phòng + ngày kết thúc (kiểm tra chồng lịch).
+  //  - nhan_vien_cong_ty: lọc theo công ty, sắp xếp theo họ tên.
+  //  - toa_nha (mảng nhúng): tra cứu văn phòng/dịch vụ/nhân viên theo mã (multikey).
+  await db.collection(COLLECTIONS.congTy.name).createIndex({ linhVuc: 1 });
+  await db.collection(COLLECTIONS.hopDongThue.name).createIndex({ maCongTy: 1, ngayBatDau: 1 });
+  await db.collection(COLLECTIONS.hopDongThue.name).createIndex({ maVanPhong: 1, ngayKetThuc: 1 });
+  await db.collection(COLLECTIONS.nhanVienCongTy.name).createIndex({ maCongTy: 1, hoTen: 1 });
+  await db.collection(COLLECTIONS.toaNha.name).createIndex({ "vanPhong.maVanPhong": 1 });
+  await db.collection(COLLECTIONS.toaNha.name).createIndex({ "dichVu.maDichVu": 1 });
+
   await client.close();
   return {
     buildings: data.buildings.length, companies: data.companies.length, employees: data.nhanVienCongTy.length,
