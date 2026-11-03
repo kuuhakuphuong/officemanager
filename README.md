@@ -36,18 +36,18 @@ OfficeBuilding_Web_DB/
 │   └── nosql/                  # CSDL NoSQL MongoDB & Aggregation (TV7 - Bùi Đoàn Quang Huy)
 │       ├── 05_DuLieu_MongoDB_TV7_BuiDoanQuangHuy.json
 │       └── 06_MongoDB_TV7_BuiDoanQuangHuy.js
-├── docker/                     # Tự động hóa Docker Linux (TV6 - Vũ Thành Phong)
+├── docker/                     # Tự động hóa Docker Linux (TV7 - Bùi Đoàn Quang Huy)
 │   ├── init-db.sh              # Script nạp tự động SQL Server (chuẩn LF Linux)
 │   └── init-mongo.js           # Script nạp tự động MongoDB
 ├── server/                     # Backend ExpressJS, Data Store, API (TV6 - Vũ Thành Phong)
-├── test/                       # Bộ kiểm thử tự động 16 test cases
-├── Dockerfile                  # Đóng gói Web App (Node 22 Alpine)
-├── docker-compose.yml          # Cấu hình cụm dịch vụ Web + SQL Server + MongoDB
+├── test/                       # Bộ kiểm thử tự động 16 test cases (TV6 - Vũ Thành Phong)
+├── Dockerfile                  # Đóng gói Web App Docker (TV7 - Bùi Đoàn Quang Huy)
+├── docker-compose.yml          # Cấu hình cụm dịch vụ Web + SQL Server + MongoDB (TV7 - Bùi Đoàn Quang Huy)
 ├── .dockerignore               # Bỏ qua node_modules, log, file thừa khi build
 ├── .gitignore                  # Bỏ qua dependencies, file môi trường bảo mật
 ├── .env.example                # Mẫu cấu hình môi trường
-├── .env.docker                 # Mẫu cấu hình môi trường cho Docker
-├── DOCKER_GUIDE.md             # Hướng dẫn chi tiết triển khai trên Linux
+├── .env.docker                 # Mẫu cấu hình môi trường cho Docker (TV7 - Bùi Đoàn Quang Huy)
+├── DOCKER_GUIDE.md             # Hướng dẫn chi tiết triển khai trên Linux (TV7 - Bùi Đoàn Quang Huy)
 ├── index.html                  # Giao diện chính của ứng dụng
 ├── package.json
 └── README.md
@@ -64,8 +64,8 @@ OfficeBuilding_Web_DB/
 | **TV3: Nguyễn Thị Lan Anh** | DBA / DDL & Dữ liệu lớn Seed 2 tháng | `database/schema/01_CreateSchema_TV3_NguyenThiLanAnh.sql`<br>`database/schema/02_InsertSeedData_TV3_NguyenThiLanAnh.sql`<br>`database/schema/03_Validate_TV3_NguyenThiLanAnh.sql`<br>`database/schema/06_ThongNhatQuyTac_TV3_NguyenThiLanAnh.sql` |
 | **TV4: Vũ Trung Hiếu** | Senior Transactions ACID & SP | `database/transactions/00_TaoKieuDuLieu_TV4_VuTrungHieu.sql`<br>`database/transactions/02_KiemTraTuongThich_TV4_VuTrungHieu.sql`<br>`database/transactions/03_Transactions_TV4_VuTrungHieu.sql`<br>`database/transactions/04_KiemThu_TV4_VuTrungHieu.sql`<br>`database/transactions/05_KiemThu_DongThoi_TV4_VuTrungHieu.sql`<br>`database/transactions/06_DoiChieuSeed_TV4_VuTrungHieu.sql`<br>`database/transactions/ChayKiemThu_TV4_VuTrungHieu.ps1` |
 | **TV5: Khúc Tuấn Anh** | Triggers T-SQL & Ràng buộc toàn vẹn | `database/triggers/05_Phan5_Triggers_TV5_KhucTuanAnh.sql`<br>`database/triggers/05_Phan5_KiemThu_TV5_KhucTuanAnh.sql` |
-| **TV6: Vũ Thành Phong** | Web Fullstack, API & Tự động hóa Docker | `server/` (Backend ExpressJS, SQL Store, Transactions)<br>`assets/` (Web SPA Dashboard & CRUD)<br>`Dockerfile`, `docker-compose.yml`, `docker/init-db.sh`, `docker/init-mongo.js`<br>`test/` (Bộ kiểm thử tự động 16 test cases) |
-| **TV7: Bùi Đoàn Quang Huy** | CSDL Phân tán 3 Site & NoSQL MongoDB | `database/distributed/01_NapDB_Site1_TrungTam_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/02_NapDB_Site2_ChiNhanh2_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/03_NapDB_Site3_ChiNhanh3_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/04_TruyVan_PhanManh_TaiThiet_TV7_BuiDoanQuangHuy.sql`<br>`database/nosql/05_DuLieu_MongoDB_TV7_BuiDoanQuangHuy.json`<br>`database/nosql/06_MongoDB_TV7_BuiDoanQuangHuy.js` |
+| **TV6: Vũ Thành Phong** | Web Fullstack, API & Giao diện | `server/` (Backend ExpressJS, SQL Store, Transactions)<br>`assets/` (Web SPA Dashboard & CRUD)<br>`test/` (Bộ kiểm thử tự động 16 test cases) |
+| **TV7: Bùi Đoàn Quang Huy** | CSDL Phân tán 3 Site, NoSQL & Đóng gói Docker | `database/distributed/01_NapDB_Site1_TrungTam_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/02_NapDB_Site2_ChiNhanh2_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/03_NapDB_Site3_ChiNhanh3_TV7_BuiDoanQuangHuy.sql`<br>`database/distributed/04_TruyVan_PhanManh_TaiThiet_TV7_BuiDoanQuangHuy.sql`<br>`database/nosql/05_DuLieu_MongoDB_TV7_BuiDoanQuangHuy.json`<br>`database/nosql/06_MongoDB_TV7_BuiDoanQuangHuy.js`<br>`Dockerfile`, `docker-compose.yml`, `docker/init-db.sh`, `docker/init-mongo.js`, `DOCKER_GUIDE.md` |
 
 ---
 

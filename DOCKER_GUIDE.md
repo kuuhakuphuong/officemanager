@@ -1,6 +1,7 @@
 # Hướng dẫn triển khai Docker Compose trên Linux Server
 
-Tài liệu hướng dẫn triển khai toàn bộ hệ thống Quản lý chuỗi Tòa nhà văn phòng (`OfficeBuildingManagement`) trên máy chủ Linux bằng Docker & Docker Compose.
+**Người xây dựng & Đóng gói:** Thành viên 7 — Bùi Đoàn Quang Huy (CHHT045)  
+**Phạm vi:** Đóng gói toàn bộ hệ thống Web Fullstack + SQL Server 2022 + MongoDB lên Docker Linux.
 
 ---
 
