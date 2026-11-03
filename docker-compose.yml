@@ -1,0 +1,94 @@
+services:
+  # 1. SQL Server Database (Central DB + 3 Distributed Sites)
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: office_sqlserver
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Password123!}
+      - MSSQL_PID=Developer
+    ports:
+      - "${DB_PORT:-1433}:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost,1433 -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\" || /opt/mssql-tools/bin/sqlcmd -S localhost,1433 -U sa -P \"$${MSSQL_SA_PASSWORD}\" -Q \"SELECT 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # 2. Database Initializer (Tự động chạy DDL, Seed, Trigger, Transactions, TV7 Sites)
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: office_db_init
+    user: root
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./docker/init-db.sh:/docker/init-db.sh:ro
+      - .:/app:ro
+    entrypoint: ["/bin/bash", "/docker/init-db.sh"]
+    environment:
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Password123!}
+      - DB_SERVER=db
+      - DB_PORT=1433
+    restart: "no"
+
+  # 3. NoSQL MongoDB (TV7 NoSQL Collections)
+  mongo:
+    image: mongo:7.0
+    container_name: office_mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=QuanLyToaNha
+    volumes:
+      - mongo_data:/data/db
+      - ./docker/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+  # 4. Web Application (Node.js 22 + ExpressJS + SPA Frontend)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: office_web_app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+      mongo:
+        condition: service_started
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATA_MODE=sqlserver
+      - DB_SERVER=db
+      - DB_PORT=1433
+      - DB_DATABASE=QLToaNha_BCNF
+      - DB_USER=sa
+      - DB_PASSWORD=${MSSQL_SA_PASSWORD:-Password123!}
+      - DB_ENCRYPT=false
+      - DB_TRUST_SERVER_CERTIFICATE=true
+      - TV7_SITE1_SERVER=db
+      - TV7_SITE1_PORT=1433
+      - TV7_SITE1_DATABASE=QLToaNha_Site1
+      - TV7_SITE2_SERVER=db
+      - TV7_SITE2_PORT=1433
+      - TV7_SITE2_DATABASE=QLToaNha_Site2
+      - TV7_SITE3_SERVER=db
+      - TV7_SITE3_PORT=1433
+      - TV7_SITE3_DATABASE=QLToaNha_Site3
+      - TV7_MONGO_URI=mongodb://mongo:27017
+      - TV7_MONGO_DATABASE=QuanLyToaNha
+
+volumes:
+  mssql_data:
+    driver: local
+  mongo_data:
+    driver: local

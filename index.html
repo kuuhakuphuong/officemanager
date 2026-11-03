@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Quản lý chuỗi tòa nhà văn phòng cho thuê" />
+    <title>Office Chain Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Đi tới nội dung chính</a>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Điều hướng chính">
+        <a class="brand" href="#dashboard" aria-label="Office Chain Manager, trang tổng quan">
+          <span class="brand-mark" aria-hidden="true">OC</span><span>Office Chain</span>
+        </a>
+        <nav id="navigation" class="navigation"></nav>
+        <div class="sidebar-status"><span class="status-dot" aria-hidden="true"></span> Chế độ cục bộ</div>
+      </aside>
+      <section class="workspace">
+        <header class="topbar">
+          <button id="menu-toggle" class="icon-button" aria-label="Mở điều hướng" aria-expanded="false">Menu</button>
+          <div><p id="breadcrumb" class="eyebrow">TỔNG QUAN</p><h1 id="page-title">Tổng quan</h1></div>
+          <div class="integration-chip" title="Chờ thông tin SQL Server từ TV3"><span aria-hidden="true">●</span> Chờ SQL Server</div>
+        </header>
+        <main id="main-content" tabindex="-1"></main>
+      </section>
+    </div>
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <script>window.APP_CONFIG = window.APP_CONFIG || { apiBase: "/api" };</script>
+    <script src="assets/app.js"></script>
+  </body>
+</html>

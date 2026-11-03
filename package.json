@@ -1,0 +1,18 @@
+{
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "check": "node --check assets/app.js && node --check server/index.js && node --check server/sql-store.js && node --check server/transactions.js && node --check server/tv7-read.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "mongodb": "^6.21.0",
+    "mssql": "^12.7.10",
+    "ui-ux-pro-max-cli": "^2.15.0"
+  }
+}
