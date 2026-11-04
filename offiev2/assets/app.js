@@ -69,6 +69,8 @@
   let recentRecordId = "";
   const reportState = {};
   const reportPages = {};
+  // Ghi dữ liệu (CRUD, trang quản lý toà nhà) báo hiệu để báo cáo tải lại số liệu mới.
+  window.addEventListener("office:data-changed", () => { for (const key of Object.keys(reportState)) delete reportState[key]; });
   let reportLookups;
   let sqlMode = false;
   let transactionsReady = false;
@@ -281,6 +283,7 @@
     try {
       const result = await request(`/transactions/${name}`, { method: "POST", body: JSON.stringify(body) });
       output.innerHTML = `<div class="notice"><span aria-hidden="true">✓</span><div><strong>Giao dịch thành công</strong><span>Đã ghi ${result.rows.length} dòng.</span></div></div>${table(transactionColumns[name], result.rows, "", (key, value) => ["TongTien", "LuongCoBan", "TienThuong", "TongLuong", "SoTienDaThu"].includes(key) ? money(value) : value)}`;
+      output.querySelectorAll(".data-table").forEach((table) => window.OfficePager?.addPager(table));
       if (name === "payment") { form.elements.invoiceId.selectedOptions[0]?.remove(); form.reset(); form.elements.amount.value = ""; }
       for (const key of Object.keys(reportState)) delete reportState[key];
       notify("Giao dịch thành công.");
@@ -307,7 +310,7 @@
     }
     const metrics = report.metrics.map(([label, key, currency = true]) => `<article class="card kpi"><p>${label}</p><strong>${currency ? money(state.summary?.[key]) : new Intl.NumberFormat("vi-VN").format(Number(state.summary?.[key] || 0))}</strong></article>`).join("");
     const rows = state.rows || [];
-    const pageSize = 100;
+    const pageSize = 10;
     const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
     const page = Math.min(reportPages[id] || 0, pageCount - 1);
     const pageRows = rows.slice(page * pageSize, (page + 1) * pageSize);
@@ -344,7 +347,7 @@
     const entity = form.dataset.entity; const record = Object.fromEntries(new FormData(form).entries());
     if (editing?.entity === entity) record.id = editing.record.id;
     const restore = setButtonBusy(form.querySelector('[type="submit"]'));
-    try { const saved = await gateway.save(entity, record); reportLookups = null; recentRecordId = saved?.id || record.id; editing = null; notify("Đã lưu dữ liệu."); await render(); setTimeout(() => { recentRecordId = ""; }, 900); } catch (error) { restore(); notify(explainError(error), true); }
+    try { const saved = await gateway.save(entity, record); reportLookups = null; window.dispatchEvent(new Event("office:data-changed")); recentRecordId = saved?.id || record.id; editing = null; notify("Đã lưu dữ liệu."); await render(); setTimeout(() => { recentRecordId = ""; }, 900); } catch (error) { restore(); notify(explainError(error), true); }
   }
   async function loadReport(id, form) {
     if (!config.apiBase) { reportState[id] = { summary: {}, rows: [], message: "Chưa cấu hình API/MySQL nên không có số liệu tài chính để hiển thị." }; return render(); }
@@ -362,7 +365,7 @@
     if (target.id === "menu-toggle") { const sidebar = document.querySelector(".sidebar"); sidebar.classList.toggle("open"); target.setAttribute("aria-expanded", String(sidebar.classList.contains("open"))); return; }
     if (target.dataset.cancelEdit !== undefined) { editing = null; return render(); }
     if (target.dataset.edit) { const rows = await gateway.list(target.dataset.edit); editing = { entity: target.dataset.edit, record: rows.find((row) => row.id === target.dataset.id) }; return render(); }
-    if (target.dataset.delete) { if (!confirm("Bạn có chắc muốn xóa bản ghi này?")) return; const restore = setButtonBusy(target, "Đang xóa…"); try { await gateway.remove(target.dataset.delete, target.dataset.id); reportLookups = null; notify("Đã xóa bản ghi."); await render(); } catch (error) { restore(); notify(explainError(error), true); } }
+    if (target.dataset.delete) { if (!confirm("Bạn có chắc muốn xóa bản ghi này?")) return; const restore = setButtonBusy(target, "Đang xóa…"); try { await gateway.remove(target.dataset.delete, target.dataset.id); reportLookups = null; window.dispatchEvent(new Event("office:data-changed")); notify("Đã xóa bản ghi."); await render(); } catch (error) { restore(); notify(explainError(error), true); } }
     if (target.dataset.export) exportCsv(target.dataset.export);
     if (target.dataset.reportPage) { reportPages[target.dataset.reportPage] = Math.max(0, (reportPages[target.dataset.reportPage] || 0) + Number(target.dataset.direction)); await render(); }
     if (target.dataset.batchAdd !== undefined) { const rows = target.previousElementSibling; if (rows.children.length < 200) rows.insertAdjacentHTML("beforeend", rows.firstElementChild.outerHTML); return; }

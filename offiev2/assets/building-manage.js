@@ -5,7 +5,7 @@
 
   const tabs = [["info", "Thông tin toà nhà"], ["staff", "Nhân sự"], ["prices", "Giá và tham số"]];
   const employeeTypes = { QUAN_LY: "Quản lý", DICH_VU: "Nhân viên dịch vụ" };
-  const state = { ctx: null, tab: "info", buildingId: "", editing: null, data: null };
+  const state = { ctx: null, tab: "info", buildingId: "", editing: null, adding: false, data: null };
 
   const buildingName = (id) => state.data.buildings.find((row) => row.id === id)?.name || id;
 
@@ -32,7 +32,13 @@
     const table = tableOf(["Mã", "Tên toà nhà", "Địa chỉ", "Số tầng", "Thao tác"], state.data.buildings, (row) =>
       `<tr><td>${escape(row.id)}</td><td>${escape(row.name)}</td><td>${escape(row.address)}</td><td>${escape(row.floors)}</td>` +
       `<td><button class="text-button" type="button" data-bm-edit="${escape(row.id)}">Sửa</button></td></tr>`);
-    return `${form}<section class="card section"><h3>Danh sách toà nhà</h3>${table}</section>`;
+    const addForm = state.adding ? `<form class="card filters" data-bm-form="building-new">
+      <label class="field">Tên toà nhà<input name="name" required></label>
+      <label class="field">Địa chỉ<input name="address" required></label>
+      <label class="field">Số tầng<input name="floors" type="number" min="1" step="1" required></label>
+      <div class="form-actions"><button class="button primary" type="submit">Tạo toà nhà</button><button class="button secondary" type="button" data-bm-cancel>Hủy</button></div>
+    </form>` : `<div class="form-actions"><button class="button primary" type="button" data-bm-add>Thêm toà nhà</button></div>`;
+    return `${addForm}${form}<section class="card section"><h3>Danh sách toà nhà</h3>${table}</section>`;
   }
 
   function staffBody() {
@@ -70,9 +76,12 @@
     main.innerHTML = `${pageHeader("Quản lý toà nhà", "Thông tin toà, nhân sự theo toà, giá dịch vụ và tham số dùng chung.")}
       <div class="form-actions" role="tablist">${tabs.map(([key, label]) => `<button class="button ${state.tab === key ? "primary" : "secondary"}" type="button" role="tab" aria-selected="${state.tab === key}" data-bm-tab="${key}">${escape(label)}</button>`).join("")}</div>
       <div id="bm-body">${body}</div>`;
+    // Phân trang cho mọi bảng trên trang (bộ phân trang dùng chung từ search-enhance.js).
+    if (window.OfficePager) main.querySelectorAll("#bm-body .data-table").forEach((table) => window.OfficePager.addPager(table));
   }
 
   async function reload(message) {
+    window.dispatchEvent(new Event("office:data-changed"));
     state.data = await state.ctx.request("/buildings/manage");
     state.ctx.notify(message);
     draw();
@@ -106,7 +115,8 @@
       if (tab) { state.tab = tab.dataset.bmTab; state.editing = null; draw(); return; }
       const edit = event.target.closest("[data-bm-edit]");
       if (edit) { state.editing = edit.dataset.bmEdit; draw(); return; }
-      if (event.target.closest("[data-bm-cancel]")) { state.editing = null; draw(); return; }
+      if (event.target.closest("[data-bm-add]")) { state.adding = true; state.editing = null; draw(); return; }
+      if (event.target.closest("[data-bm-cancel]")) { state.editing = null; state.adding = false; draw(); return; }
       const saveButton = event.target.closest("[data-bm-save]");
       if (saveButton) await save(saveButton.dataset.bmSave, saveButton.dataset.id, main);
     };
@@ -114,10 +124,20 @@
       if (event.target.dataset.bmSelect === "buildingId") { state.buildingId = event.target.value; draw(); }
     };
     main.onsubmit = async (event) => {
+      const { request, notify } = state.ctx;
+      const created = event.target.closest("[data-bm-form='building-new']");
+      if (created) {
+        event.preventDefault();
+        try {
+          await request("/buildings", { method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(created).entries())) });
+          state.adding = false;
+          await reload("Đã tạo toà nhà mới.");
+        } catch (error) { notify(error.message, true); }
+        return;
+      }
       const form = event.target.closest("[data-bm-form='building']");
       if (!form) return;
       event.preventDefault();
-      const { request, notify } = state.ctx;
       try {
         await request(`/buildings/${form.dataset.id}`, { method: "PUT", body: JSON.stringify(Object.fromEntries(new FormData(form).entries())) });
         state.editing = null;

@@ -17,6 +17,11 @@ function registerBuildingRoutes(app, mongoStore) {
   // Chế độ cục bộ không có MongoDB: không đăng ký route, trang sẽ báo cần MongoDB.
   if (!mongoStore) return;
 
+  // Kết nối trước mọi route: không phụ thuộc việc /api/health đã được gọi trước hay chưa.
+  app.use("/api/buildings", async (_, response, next) => {
+    try { await mongoStore.connect(); return next(); } catch (error) { return next(error); }
+  });
+
   app.get("/api/buildings/manage", async (_, response, next) => {
     try {
       const [buildingDocs, categories, parameterDocs, locationDocs] = await Promise.all([
@@ -40,6 +45,22 @@ function registerBuildingRoutes(app, mongoStore) {
         parameters: parameterDocs.map((p) => ({ name: p._id, value: p.giaTri, description: p.moTa })),
         locations: locationDocs.map((v) => ({ id: v._id, name: v.tenViTri, pricePerM2: v.donGiaThueM2 }))
       });
+    } catch (error) { return next(error); }
+  });
+
+  // Tạo toà nhà mới: mã tự sinh theo dãy TNxx (theo mã lớn nhất hiện có). maToaNha là khóa phân mảnh nên phải có.
+  app.post("/api/buildings", async (request, response, next) => {
+    try {
+      const name = String(request.body?.name || "").trim();
+      const address = String(request.body?.address || "").trim();
+      if (!name || !address) throw new ValidationError("Tên và địa chỉ toà nhà không được để trống.");
+      const floors = Math.trunc(positiveNumber(request.body?.floors, "Số tầng"));
+      const existing = await mongoStore.col("toaNha").find({}, { projection: { _id: 1 } }).toArray();
+      const next = existing.reduce((max, row) => Math.max(max, Number(String(row._id).replace(/\D/g, "")) || 0), 0) + 1;
+      const id = `TN${String(next).padStart(2, "0")}`;
+      await mongoStore.col("toaNha").insertOne({ _id: id, maToaNha: id, tenToaNha: name, diaChi: address, soTang: floors,
+        vanPhong: [], dichVu: [], nhanVien: [] });
+      return response.status(201).json({ id, name, address, floors });
     } catch (error) { return next(error); }
   });
 

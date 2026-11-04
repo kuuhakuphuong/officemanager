@@ -16,7 +16,8 @@ services:
     user: "0:0"
     restart: "no"
     entrypoint: ["/bin/bash", "-c"]
-    command: ["openssl rand -base64 756 > /keyfile/keyfile && chown 999:999 /keyfile/keyfile && chmod 400 /keyfile/keyfile && echo keyfile tao xong"]
+    # Chi tao keyfile khi chua co: moi lan up sinh key moi se lam cac node dang chay bi loi storedKey mismatch.
+    command: ["[ -f /keyfile/keyfile ] || openssl rand -base64 756 > /keyfile/keyfile; chown 999:999 /keyfile/keyfile && chmod 400 /keyfile/keyfile && echo keyfile san sang"]
     volumes:
       - mongo_keyfile:/keyfile
 

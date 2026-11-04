@@ -35,7 +35,8 @@ app.use((_, response, next) => {
   });
   next();
 });
-app.use("/assets", express.static(path.join(projectRoot, "assets"), { maxAge: "1h" }));
+// maxAge 0: trình duyệt kiểm tra lại file mỗi lần, tránh giữ bản giao diện cũ khi đổi phiên bản.
+app.use("/assets", express.static(path.join(projectRoot, "assets"), { maxAge: 0 }));
 registerBuildingRoutes(app, sqlStore);
 
 function sendError(response, status, code, message) {

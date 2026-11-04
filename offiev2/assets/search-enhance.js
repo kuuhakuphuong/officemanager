@@ -173,6 +173,9 @@
     if (record) exportRecordDoc(entity, record);
   });
 
+  // Cho trang khác (quản lý toà nhà) dùng chung bộ phân trang.
+  window.OfficePager = { addPager };
+
   const main = document.getElementById("main-content");
   if (main) {
     new MutationObserver(() => enhance(main)).observe(main, { childList: true, subtree: true });

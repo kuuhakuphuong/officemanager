@@ -38,6 +38,23 @@ function registerBuildingRoutes(app, sqlStore) {
     } catch (error) { return next(error); }
   });
 
+  // Tạo toà nhà mới: mã tự sinh theo dãy TNxx (TN01, TN02, ... theo mã lớn nhất hiện có).
+  app.post("/api/buildings", async (request, response, next) => {
+    if (!requireSql(sqlStore, response)) return;
+    try {
+      const name = String(request.body?.name || "").trim();
+      const address = String(request.body?.address || "").trim();
+      if (!name || !address) throw new ValidationError("Tên và địa chỉ toà nhà không được để trống.");
+      const floors = Math.trunc(positiveNumber(request.body?.floors, "Số tầng"));
+      const existing = await sqlStore.query("SELECT MaToaNha AS id FROM ToaNha");
+      const next = existing.reduce((max, row) => Math.max(max, Number(String(row.id).replace(/\D/g, "")) || 0), 0) + 1;
+      const id = `TN${String(next).padStart(2, "0")}`;
+      await sqlStore.query("INSERT INTO ToaNha (MaToaNha, TenToaNha, DiaChi, SoTang) VALUES (@id, @name, @address, @floors)",
+        { id, name, address, floors });
+      return response.status(201).json({ id, name, address, floors });
+    } catch (error) { return next(error); }
+  });
+
   app.put("/api/buildings/:id", async (request, response, next) => {
     if (!requireSql(sqlStore, response)) return;
     try {
