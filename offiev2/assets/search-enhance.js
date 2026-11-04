@@ -62,15 +62,56 @@
     toast("Đã xuất file.");
   }
 
+  // Lọc đánh dấu dòng không khớp (data-miss); phân trang chỉ hiện các dòng khớp trong trang hiện tại.
   function applyRowFilter(table, ids) {
-    let shown = 0;
     table.querySelectorAll("tbody tr").forEach((tr) => {
       const key = tr.querySelector("button[data-id]");
-      const match = !ids || (key && ids.has(key.dataset.id));
-      tr.hidden = !match;
-      if (match) shown += 1;
+      tr.dataset.miss = !ids || (key && ids.has(key.dataset.id)) ? "" : "1";
     });
-    return shown;
+    table.dataset.page = "1";
+    return paginate(table);
+  }
+
+  function paginate(table) {
+    const size = Number(table.dataset.pageSize) || 10;
+    const matched = [...table.querySelectorAll("tbody tr")].filter((tr) => !tr.dataset.miss);
+    const pages = Math.max(1, Math.ceil(matched.length / size));
+    const page = Math.min(Math.max(Number(table.dataset.page) || 1, 1), pages);
+    table.dataset.page = String(page);
+    table.querySelectorAll("tbody tr").forEach((tr) => { tr.hidden = true; });
+    matched.slice((page - 1) * size, page * size).forEach((tr) => { tr.hidden = false; });
+    const pager = table.parentElement.nextElementSibling;
+    if (pager?.classList.contains("enh-pager")) {
+      pager.querySelector("[data-enh-info]").textContent = `Trang ${page} / ${pages} · ${matched.length} dòng`;
+      pager.querySelector("[data-enh-size]").value = String(size);
+      pager.querySelector("[data-enh-prev]").disabled = page <= 1;
+      pager.querySelector("[data-enh-next]").disabled = page >= pages;
+    }
+    return matched.length;
+  }
+
+  function addPager(table) {
+    const pager = document.createElement("div");
+    pager.className = "enh-pager";
+    pager.style.cssText = "display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px";
+    pager.innerHTML = `<label>Số dòng mỗi trang <select data-enh-size>${[10, 25, 50].map((n) => `<option value="${n}">${n}</option>`).join("")}</select></label><span data-enh-info></span><button class="button secondary" type="button" data-enh-prev>Trang trước</button><button class="button secondary" type="button" data-enh-next>Trang sau</button>`;
+    table.parentElement.insertAdjacentElement("afterend", pager);
+    table.dataset.pageSize = "10";
+    table.dataset.page = "1";
+    pager.querySelector("[data-enh-size]").addEventListener("change", (event) => {
+      table.dataset.pageSize = event.target.value;
+      table.dataset.page = "1";
+      paginate(table);
+    });
+    pager.querySelector("[data-enh-prev]").addEventListener("click", () => {
+      table.dataset.page = String(Number(table.dataset.page) - 1);
+      paginate(table);
+    });
+    pager.querySelector("[data-enh-next]").addEventListener("click", () => {
+      table.dataset.page = String(Number(table.dataset.page) + 1);
+      paginate(table);
+    });
+    paginate(table);
   }
 
   async function enhance(main) {
@@ -93,6 +134,7 @@
       : `<label class="field">${esc(label)}<input name="${name}" placeholder="${esc(label)}"></label>`).join("");
     form.innerHTML = `${controls}<div class="form-actions"><button class="button primary" type="submit">Tìm / lọc</button><button class="button secondary" type="button" data-enh-reset>Xóa lọc</button></div>`;
     section.parentElement.insertBefore(form, section);
+    addPager(table);
 
     if (exportable.includes(current)) {
       table.querySelectorAll("tbody tr").forEach((tr) => {

@@ -9,6 +9,7 @@ const { tv5Error } = require("./tv5-errors");
 const { executeTransaction, tv4Error, paymentMessage } = require("./transactions");
 const { getTv7Snapshot } = require("./tv7-read");
 const { registerSearchRoutes } = require("./search-routes");
+const { registerBuildingRoutes } = require("./building-routes");
 
 const projectRoot = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 3000);
@@ -35,6 +36,7 @@ app.use((_, response, next) => {
   next();
 });
 app.use("/assets", express.static(path.join(projectRoot, "assets"), { maxAge: "1h" }));
+registerBuildingRoutes(app, sqlStore);
 
 function sendError(response, status, code, message) {
   response.status(status).json({ code, message });

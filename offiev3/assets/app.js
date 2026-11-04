@@ -117,7 +117,7 @@
   const explainError = (error) => error.message || "Có lỗi xảy ra. Hãy thử lại.";
 
   function navMarkup() {
-    const general = [["dashboard", "Tổng quan"], ...Object.entries(schemas).map(([key, item]) => [key, item.title]), ["transactions", "Giao dịch"]];
+    const general = [["dashboard", "Tổng quan"], ...Object.entries(schemas).map(([key, item]) => [key, item.title]), ["buildings", "Quản lý toà nhà"], ["transactions", "Giao dịch"]];
     const reportLinks = Object.entries(reports).map(([key, item]) => [`report-${key}`, item.title]);
     // TV6 sửa: tạm ẩn mục TV7 trên web; phần tra cứu và API vẫn được giữ để dùng khi cần demo.
     // return `<p class="nav-group">VẬN HÀNH</p>${general.map(link).join("")}<p class="nav-group">BÁO CÁO</p>${reportLinks.map(link).join("")}<p class="nav-group">CSDL PHÂN TÁN</p>${link(["tv7", "Tra cứu TV7"])}`;
@@ -324,7 +324,7 @@
     const restore = setButtonBusy(form.querySelector('[type="submit"]'));
     try {
       const result = await request(`/transactions/${name}`, { method: "POST", body: JSON.stringify(body) });
-      output.innerHTML = `<div class="notice"><span aria-hidden="true">✓</span><div><strong>Giao dịch thành công</strong><span>Procedure ${escape(result.procedure)} trả ${result.rows.length} dòng.</span></div></div>${table(transactionColumns[name], result.rows, "", (key, value) => ["TongTien", "LuongCoBan", "TienThuong", "TongLuong", "SoTienDaThu"].includes(key) ? money(value) : value)}`;
+      output.innerHTML = `<div class="notice"><span aria-hidden="true">✓</span><div><strong>Giao dịch thành công</strong><span>Đã ghi ${result.rows.length} dòng.</span></div></div>${table(transactionColumns[name], result.rows, "", (key, value) => ["TongTien", "LuongCoBan", "TienThuong", "TongLuong", "SoTienDaThu"].includes(key) ? money(value) : value)}`;
       if (name === "payment") { form.elements.invoiceId.selectedOptions[0]?.remove(); form.reset(); form.elements.amount.value = ""; }
       for (const key of Object.keys(reportState)) delete reportState[key];
       notify("Giao dịch thành công.");
@@ -375,6 +375,7 @@
       if (route === "dashboard") await renderDashboard();
       else if (schemas[route]) await renderCrud(route);
       else if (route === "transactions") await renderTransactions();
+      else if (route === "buildings") await window.renderBuildingManage({ main, pageHeader, setHeading, escape, money, notify, request, sqlMode });
       // TV6 sửa: tạm ẩn route TV7; URL #tv7 sẽ quay về trang Tổng quan.
       // else if (route === "tv7") await renderTv7();
       else if (route.startsWith("report-")) await renderReport(route.replace("report-", ""));

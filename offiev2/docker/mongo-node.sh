@@ -39,9 +39,11 @@ wait_primary() {
 # Khoi tao replica set neu chua co (chay tren localhost cua chinh node).
 init_replica_set() {
     local port="$1" config="$2"
+    # Dung db.hello() thay rs.status(): khi bat keyFile, rs.status() bao loi "requires authentication"
+    # ngay ca khi replica set da co, nen truoc day script goi rs.initiate va thoat.
     mongosh --quiet --port "$port" --eval "
-        try { rs.status(); print('replica set da khoi tao'); }
-        catch (e) { rs.initiate($config); print('da khoi tao replica set'); }"
+        if (db.hello().setName) { print('replica set da khoi tao'); }
+        else { rs.initiate($config); print('da khoi tao replica set'); }"
 }
 
 case "$ROLE" in

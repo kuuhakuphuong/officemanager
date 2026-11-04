@@ -10,6 +10,8 @@ const { validateRecord } = require("./crud-schema");
 const { validateTransaction, transactionNames } = require("./validation");
 const { ValidationError } = require("./errors");
 const { filterRows } = require("../assets/search");
+const { registerSearchRoutes } = require("./search-routes");
+const { registerBuildingRoutes } = require("./building-routes");
 
 const projectRoot = path.resolve(__dirname, "..");
 const port = Number(process.env.PORT || 3000);
@@ -20,6 +22,7 @@ if (!["local", "mongo"].includes(dataMode)) {
 const store = new LocalStore(path.join(projectRoot, "data", "local-db.json"));
 const mongoStore = dataMode === "mongo" ? new MongoStore(new MongoConnection(mongoConfig())) : null;
 const app = express();
+registerSearchRoutes(app, mongoStore, store);
 
 const reportNames = ["company-cost", "daily-services", "payroll", "building-cashflow"];
 
@@ -40,6 +43,7 @@ app.use((_, response, next) => {
   next();
 });
 app.use("/assets", express.static(path.join(projectRoot, "assets"), { maxAge: "1h" }));
+registerBuildingRoutes(app, mongoStore);
 
 function sendError(response, status, code, message) {
   response.status(status).json({ code, message });

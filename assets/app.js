@@ -95,8 +95,8 @@
     paymentReady = Boolean(health.paymentReady);
     const chip = document.querySelector(".integration-chip");
     const sidebarStatus = document.querySelector(".sidebar-status");
-    if (chip) { chip.textContent = sqlMode ? "SQL Server · TV4" : "Chế độ cục bộ"; chip.title = sqlMode ? health.database : "Dữ liệu lưu trên máy này"; }
-    if (sidebarStatus) sidebarStatus.textContent = sqlMode ? "SQL Server · TV4" : "Chế độ cục bộ";
+    if (chip) { chip.textContent = sqlMode ? "SQL Server" : "Chế độ cục bộ"; chip.title = sqlMode ? health.database : "Dữ liệu lưu trên máy này"; }
+    if (sidebarStatus) sidebarStatus.textContent = sqlMode ? "SQL Server" : "Chế độ cục bộ";
   }).catch(() => {}) : Promise.resolve();
   const gateway = {
     async list(entity) { return config.apiBase ? request(`/${entity}`) : local.list(entity); },
@@ -113,7 +113,7 @@
   const explainError = (error) => error.message || "Có lỗi xảy ra. Hãy thử lại.";
 
   function navMarkup() {
-    const general = [["dashboard", "Tổng quan"], ...Object.entries(schemas).map(([key, item]) => [key, item.title]), ["transactions", "Giao dịch"]];
+    const general = [["dashboard", "Tổng quan"], ...Object.entries(schemas).map(([key, item]) => [key, item.title]), ["buildings", "Quản lý toà nhà"], ["transactions", "Giao dịch"]];
     const reportLinks = Object.entries(reports).map(([key, item]) => [`report-${key}`, item.title]);
     // TV6 sửa: tạm ẩn mục TV7 trên web; phần tra cứu và API vẫn được giữ để dùng khi cần demo.
     // return `<p class="nav-group">VẬN HÀNH</p>${general.map(link).join("")}<p class="nav-group">BÁO CÁO</p>${reportLinks.map(link).join("")}<p class="nav-group">CSDL PHÂN TÁN</p>${link(["tv7", "Tra cứu TV7"])}`;
@@ -139,10 +139,10 @@
     setHeading("Tổng quan", "TỔNG QUAN");
     // TV6 sửa: tổng quan phản ánh đúng trạng thái procedure thanh toán trên CSDL hiện tại.
     const integrationMessage = !sqlMode ? "CRUD được lưu cục bộ; giao dịch và báo cáo tài chính cần SQL Server."
-      : !transactionsReady ? "Chưa đủ procedure TV4 hoặc trigger TV5 trên CSDL này."
-        : paymentReady ? "Năm giao dịch TV4 đã sẵn sàng trên CSDL BCNF 18 bảng."
-          : "Bốn giao dịch nền đã sẵn sàng; cần cài bản procedure thanh toán mới.";
-    main.innerHTML = `${pageHeader("Trung tâm vận hành", sqlMode ? "Quản lý dữ liệu BCNF của TV3." : "Quản lý dữ liệu cục bộ.")}<div class="grid kpis">${[["Công ty", count.companies], ["Văn phòng", count.offices], ["Hợp đồng", count.contracts], ["Nhân viên", count.employees]].map(([label, value]) => `<article class="card kpi"><p>${label}</p><strong>${value}</strong></article>`).join("")}</div><div class="grid split" style="margin-top:16px"><section class="card section"><h3>Trạng thái tích hợp</h3><div class="notice"><span aria-hidden="true">i</span><div><strong>${sqlMode ? "SQL Server · TV4" : "Chế độ cục bộ"}</strong><span>${escape(integrationMessage)}</span></div></div></section><section class="card section"><h3>Việc cần làm tiếp theo</h3><p class="section-note">${sqlMode ? "Quản lý danh mục, thực hiện giao dịch được hỗ trợ hoặc tra cứu báo cáo." : "Nhập thử các thực thể bằng CRUD hoặc cấu hình SQL Server để tra cứu dữ liệu BCNF."}</p></section></div>`;
+      : !transactionsReady ? "Chưa đủ thủ tục và trigger trên CSDL này."
+        : paymentReady ? "Đủ năm giao dịch đã sẵn sàng."
+          : "Bốn giao dịch nền đã sẵn sàng; cần cài thêm thủ tục thanh toán.";
+    main.innerHTML = `${pageHeader("Trung tâm vận hành", sqlMode ? "Quản lý dữ liệu công ty, toà nhà và hợp đồng." : "Quản lý dữ liệu cục bộ.")}<div class="grid kpis">${[["Công ty", count.companies], ["Văn phòng", count.offices], ["Hợp đồng", count.contracts], ["Nhân viên", count.employees]].map(([label, value]) => `<article class="card kpi"><p>${label}</p><strong>${value}</strong></article>`).join("")}</div><div class="grid split" style="margin-top:16px"><section class="card section"><h3>Trạng thái tích hợp</h3><div class="notice"><span aria-hidden="true">i</span><div><strong>${sqlMode ? "SQL Server" : "Chế độ cục bộ"}</strong><span>${escape(integrationMessage)}</span></div></div></section><section class="card section"><h3>Việc cần làm tiếp theo</h3><p class="section-note">${sqlMode ? "Quản lý danh mục, thực hiện giao dịch được hỗ trợ hoặc tra cứu báo cáo." : "Nhập thử các thực thể bằng CRUD hoặc cấu hình SQL Server để tra cứu dữ liệu."}</p></section></div>`;
   }
   async function renderTv7() {
     setHeading("Tra cứu TV7", "CSDL PHÂN TÁN");
@@ -280,7 +280,7 @@
     const restore = setButtonBusy(form.querySelector('[type="submit"]'));
     try {
       const result = await request(`/transactions/${name}`, { method: "POST", body: JSON.stringify(body) });
-      output.innerHTML = `<div class="notice"><span aria-hidden="true">✓</span><div><strong>Giao dịch thành công</strong><span>Procedure ${escape(result.procedure)} trả ${result.rows.length} dòng.</span></div></div>${table(transactionColumns[name], result.rows, "", (key, value) => ["TongTien", "LuongCoBan", "TienThuong", "TongLuong", "SoTienDaThu"].includes(key) ? money(value) : value)}`;
+      output.innerHTML = `<div class="notice"><span aria-hidden="true">✓</span><div><strong>Giao dịch thành công</strong><span>Đã ghi ${result.rows.length} dòng.</span></div></div>${table(transactionColumns[name], result.rows, "", (key, value) => ["TongTien", "LuongCoBan", "TienThuong", "TongLuong", "SoTienDaThu"].includes(key) ? money(value) : value)}`;
       if (name === "payment") { form.elements.invoiceId.selectedOptions[0]?.remove(); form.reset(); form.elements.amount.value = ""; }
       for (const key of Object.keys(reportState)) delete reportState[key];
       notify("Giao dịch thành công.");
@@ -331,6 +331,7 @@
       if (route === "dashboard") await renderDashboard();
       else if (schemas[route]) await renderCrud(route);
       else if (route === "transactions") await renderTransactions();
+      else if (route === "buildings") await window.renderBuildingManage({ main, pageHeader, setHeading, escape, money, notify, request, sqlMode });
       // TV6 sửa: tạm ẩn route TV7; URL #tv7 sẽ quay về trang Tổng quan.
       // else if (route === "tv7") await renderTv7();
       else if (route.startsWith("report-")) await renderReport(route.replace("report-", ""));
