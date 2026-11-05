@@ -40,37 +40,38 @@ BEGIN TRY
     VALUES (8, 2026, '20260801'), (9, 2026, '20260901');
 
     INSERT dbo.ThamSo(TenThamSo, GiaTri, MoTa) VALUES
-        ('NGUONG_NGUOI', 10, N'Nguong so nguoi duong; gia dinh cho du lieu mau'),
-        ('BUOC_NGUOI', 5, N'Buoc tang so nguoi; gia dinh cho du lieu mau'),
-        ('NGUONG_DIEN_TICH', 100, N'Nguong dien tich m2; gia dinh cho du lieu mau'),
-        ('BUOC_DIEN_TICH', 10, N'Buoc tang dien tich m2; gia dinh cho du lieu mau'),
-        ('TY_LE_TANG_GIA', 0.05, N'Ty le tang phi; gia dinh cho du lieu mau');
+        ('NGUONG_NGUOI', 10, N'Ngưỡng số người để tính bậc giá dịch vụ tháng'),
+        ('BUOC_NGUOI', 5, N'Bước tăng số người cho mỗi bậc giá'),
+        ('NGUONG_DIEN_TICH', 100, N'Ngưỡng diện tích (m2) để tính bậc giá'),
+        ('BUOC_DIEN_TICH', 10, N'Bước tăng diện tích (m2) cho mỗi bậc'),
+        ('TY_LE_TANG_GIA', 0.05, N'Tỷ lệ tăng giá cho mỗi bậc');
 
     INSERT dbo.ViTri(MaViTri, TenViTri, DonGiaThueM2) VALUES
-        ('VT_TRONG', N'Khu ben trong', 200000),
-        ('VT_MAT_TIEN', N'Mat tien', 250000);
+        ('VT_TRONG', N'Khu vực trong nhà', 200000),
+        ('VT_MAT_TIEN', N'Mặt tiền', 250000);
 
     INSERT dbo.LoaiDichVu(MaLoaiDV, TenLoai, KieuTinhPhi, CoTinhTheoNguoi, CoTinhTheoDienTich) VALUES
-        ('AN_UONG', N'An uong', 'LUOT', 0, 0),
-        ('GUI_XE', N'Gui xe', 'LUOT', 0, 0),
-        ('VE_SINH', N'Ve sinh van phong', 'THANG', 1, 1);
+        ('AN_UONG', N'Ăn uống', 'LUOT', 0, 0),
+        ('GUI_XE', N'Gửi xe', 'LUOT', 0, 0),
+        ('VE_SINH', N'Vệ sinh văn phòng', 'THANG', 1, 1);
 
     INSERT dbo.BacCongViec(MaBac, TenBac, LuongCoBan, HeSoDoanhThu) VALUES
-        ('BAC_QL', N'Quan ly toa nha', 18000000, 0),
-        ('BAC_AN', N'Nhan vien nha an', 8000000, 0.05),
-        ('BAC_XE', N'Nhan vien bai xe', 7500000, 0.04);
+        ('BAC_QL', N'Quản lý tòa nhà', 18000000, 0),
+        ('BAC_AN', N'Nhân viên nhà ăn', 8000000, 0.05),
+        ('BAC_XE', N'Nhân viên bãi xe', 7500000, 0.04);
 
-    INSERT dbo.ToaNha(MaToaNha, TenToaNha, DiaChi, SoTang)
-    SELECT CONCAT('TN0', So), CONCAT(N'Toa nha mau ', So),
-        CONCAT(So * 10, N' Duong Mo Phong, Ha Noi'), 8 + So
-    FROM #So WHERE So BETWEEN 1 AND 3;
+    INSERT dbo.ToaNha(MaToaNha, TenToaNha, DiaChi, SoTang) VALUES
+        ('TN01', N'Tòa nhà Thăng Long Center', N'Số 10 Duy Tân, Cầu Giấy, Hà Nội', 9),
+        ('TN02', N'Tòa nhà Sông Hàn Business', N'Số 120 Bạch Đằng, Hải Châu, Đà Nẵng', 10),
+        ('TN03', N'Tòa nhà Sài Gòn Tower', N'Số 25 Lê Duẩn, Quận 1, TP. Hồ Chí Minh', 11);
 
-    INSERT dbo.CongTy(MaCongTy, TenCongTy, MaSoThue, DiaChi, DienThoai, Email, LinhVuc)
-    SELECT CONCAT('CT0', So), CONCAT(N'Cong ty du lieu mau ', So),
-        CONCAT('010900000', So), CONCAT(So, N' Duong Du Lieu Mau, Ha Noi'),
-        CONCAT('090000000', So), CONCAT('company', So, '@example.com'),
-        CASE WHEN So % 2 = 0 THEN N'Thuong mai' ELSE N'Cong nghe thong tin' END
-    FROM #So WHERE So BETWEEN 1 AND 6;
+    INSERT dbo.CongTy(MaCongTy, TenCongTy, MaSoThue, DiaChi, DienThoai, Email, LinhVuc) VALUES
+        ('CT01', N'Công ty TNHH Giải pháp Phần mềm Thăng Long', '0109000001', N'Số 5 Phạm Hùng, Nam Từ Liêm, Hà Nội', '0243123401', 'contact@thanglongsoft.vn', N'Công nghệ thông tin'),
+        ('CT02', N'Công ty Cổ phần Thương mại Hoàng Hà', '0109000002', N'Số 18 Nguyễn Chí Thanh, Đống Đa, Hà Nội', '0243123402', 'info@hoanghatrade.vn', N'Thương mại'),
+        ('CT03', N'Công ty TNHH Tư vấn Tài chính Bình Minh', '0109000003', N'Số 9 Láng Hạ, Ba Đình, Hà Nội', '0243123403', 'hello@binhminhfin.vn', N'Tài chính'),
+        ('CT04', N'Công ty Cổ phần Logistics Sông Hồng', '0109000004', N'Số 33 Trần Phú, Hà Đông, Hà Nội', '0243123404', 'sales@songhonglogistics.vn', N'Logistics'),
+        ('CT05', N'Công ty TNHH Dược phẩm An Khang', '0109000005', N'Số 71 Hoàng Quốc Việt, Cầu Giấy, Hà Nội', '0243123405', 'cskh@ankhangpharma.vn', N'Dược phẩm'),
+        ('CT06', N'Công ty Cổ phần Đầu tư Sao Mai', '0109000006', N'Số 2 Cầu Giấy, Ba Đình, Hà Nội', '0243123406', 'contact@saomai-invest.vn', N'Bất động sản');
 
     INSERT dbo.VanPhong(MaVanPhong, MaToaNha, MaViTri, Tang, DienTich)
     SELECT CONCAT('VP', RIGHT(CONCAT('00', So), 2)), CONCAT('TN0', (So - 1) / 4 + 1),
@@ -86,11 +87,17 @@ BEGIN TRY
     INSERT dbo.NhanVienCongTy(MaNVCT, MaCongTy, HoTen, GioiTinh, NgaySinh,
         DienThoai, Email, ChucVu, NgayVaoLam, NgayNghiViec)
     SELECT CONCAT('NVCT', RIGHT(CONCAT('000', So), 3)), CONCAT('CT0', (So - 1) / 10 + 1),
-        CONCAT(N'Nhan vien mau ', RIGHT(CONCAT('000', So), 3)),
+        -- Họ tên ghép từ họ, đệm, tên theo giới tính (cùng quy tắc với bản MySQL).
+        CONCAT(
+            CHOOSE(So % 8 + 1, N'Nguyễn', N'Trần', N'Lê', N'Phạm', N'Hoàng', N'Vũ', N'Đặng', N'Bùi'), N' ',
+            CASE WHEN So % 2 = 0 THEN CHOOSE(So % 5 + 1, N'Thị', N'Ngọc', N'Thu', N'Kim', N'Phương')
+                ELSE CHOOSE(So % 5 + 1, N'Văn', N'Đức', N'Quốc', N'Minh', N'Hữu') END, N' ',
+            CASE WHEN So % 2 = 0 THEN CHOOSE((So * 3) % 10 + 1, N'Lan', N'Hoa', N'Mai', N'Linh', N'Hương', N'Trang', N'Nga', N'Thảo', N'Yến', N'Ngân')
+                ELSE CHOOSE((So * 3) % 10 + 1, N'Anh', N'Hùng', N'Dũng', N'Khoa', N'Long', N'Tuấn', N'Nam', N'Sơn', N'Đạt', N'Hiếu') END),
         CASE WHEN So % 2 = 0 THEN 'F' ELSE 'M' END,
         DATEADD(day, So * 17, CONVERT(date, '19900101')),
         CONCAT('09100000', RIGHT(CONCAT('00', So), 2)), CONCAT('employee', So, '@example.com'),
-        N'Chuyen vien', '20260701', NULL
+        CHOOSE(So % 3 + 1, N'Chuyên viên', N'Nhân viên kinh doanh', N'Kế toán viên'), '20260701', NULL
     FROM #So WHERE So BETWEEN 1 AND 60;
 
     INSERT dbo.DichVu(MaDichVu, MaToaNha, MaLoaiDV, TenDichVu, DonGiaCoBan)
@@ -98,9 +105,9 @@ BEGIN TRY
         loai.MaLoaiDV, CONCAT(loai.Ten, N' - ', toanha.TenToaNha), loai.DonGia
     FROM dbo.ToaNha AS toanha
     CROSS JOIN (VALUES
-        ('AN', 'AN_UONG', N'An trua', CONVERT(decimal(18,2), 35000)),
-        ('XE', 'GUI_XE', N'Gui xe may', CONVERT(decimal(18,2), 5000)),
-        ('VS', 'VE_SINH', N'Ve sinh', CONVERT(decimal(18,2), 1500000))
+        ('AN', 'AN_UONG', N'Bữa trưa', CONVERT(decimal(18,2), 35000)),
+        ('XE', 'GUI_XE', N'Gửi xe máy', CONVERT(decimal(18,2), 5000)),
+        ('VS', 'VE_SINH', N'Vệ sinh', CONVERT(decimal(18,2), 1500000))
     ) AS loai(TienTo, MaLoaiDV, Ten, DonGia);
 
     INSERT dbo.SuDungDichVu(MaCongTy, MaDichVu, NgayBatDau, NgayKetThuc)
@@ -118,19 +125,19 @@ BEGIN TRY
     CROSS JOIN #Ngay AS ngay;
 
     INSERT dbo.NhanVienToaNha(MaNVTN, MaToaNha, MaQuanLy, LoaiNV, HoTen,
-        GioiTinh, NgaySinh, DienThoai, Email, NgayVaoLam)
-    SELECT CONCAT('QL', RIGHT(MaToaNha, 2)), MaToaNha, NULL, 'QUAN_LY',
-        CONCAT(N'Quan ly mau ', MaToaNha), 'M', '19850101', NULL,
-        CONCAT('manager', RIGHT(MaToaNha, 2), '@example.com'), '20260101'
-    FROM dbo.ToaNha;
+        GioiTinh, NgaySinh, DienThoai, Email, NgayVaoLam) VALUES
+        ('QL01', 'TN01', NULL, 'QUAN_LY', N'Nguyễn Hoàng Long', 'M', '1985-01-01', '0912000001', 'quanly.thanglong@example.com', '2026-01-01'),
+        ('QL02', 'TN02', NULL, 'QUAN_LY', N'Phạm Đức Thắng', 'M', '1983-05-14', '0912000002', 'quanly.songhan@example.com', '2026-01-01'),
+        ('QL03', 'TN03', NULL, 'QUAN_LY', N'Lê Thị Ngọc Anh', 'F', '1987-09-02', '0912000003', 'quanly.saigon@example.com', '2026-01-01');
 
     INSERT dbo.NhanVienToaNha(MaNVTN, MaToaNha, MaQuanLy, LoaiNV, HoTen,
-        GioiTinh, NgaySinh, DienThoai, Email, NgayVaoLam)
-    SELECT CONCAT('NV', dv.MaDichVu), dv.MaToaNha, CONCAT('QL', RIGHT(dv.MaToaNha, 2)),
-        'DICH_VU', CONCAT(N'Nhan vien mau ', dv.MaDichVu),
-        CASE WHEN dv.MaLoaiDV = 'AN_UONG' THEN 'F' ELSE 'M' END,
-        '19920101', NULL, CONCAT('staff', dv.MaDichVu, '@example.com'), '20260101'
-    FROM dbo.DichVu AS dv WHERE dv.MaLoaiDV IN ('AN_UONG', 'GUI_XE');
+        GioiTinh, NgaySinh, DienThoai, Email, NgayVaoLam) VALUES
+        ('NVAN01', 'TN01', 'QL01', 'DICH_VU', N'Hoàng Thị Lan', 'F', '1992-01-01', NULL, 'lan.hoang@example.com', '2026-01-01'),
+        ('NVXE01', 'TN01', 'QL01', 'DICH_VU', N'Vũ Minh Khoa', 'M', '1992-01-01', NULL, 'khoa.vu@example.com', '2026-01-01'),
+        ('NVAN02', 'TN02', 'QL02', 'DICH_VU', N'Đặng Thị Thu Hiền', 'F', '1992-01-01', NULL, 'hien.dang@example.com', '2026-01-01'),
+        ('NVXE02', 'TN02', 'QL02', 'DICH_VU', N'Bùi Quốc Bảo', 'M', '1992-01-01', NULL, 'bao.bui@example.com', '2026-01-01'),
+        ('NVAN03', 'TN03', 'QL03', 'DICH_VU', N'Trần Thị Ngọc Yến', 'F', '1992-01-01', NULL, 'yen.tran@example.com', '2026-01-01'),
+        ('NVXE03', 'TN03', 'QL03', 'DICH_VU', N'Nguyễn Văn Tâm', 'M', '1992-01-01', NULL, 'tam.nguyen@example.com', '2026-01-01');
 
     INSERT dbo.PhanCongNVTN(MaNVTN, Thang, Nam, MaDichVu, MaBac)
     SELECT nv.MaNVTN, ky.Thang, ky.Nam, dv.MaDichVu,
@@ -161,7 +168,7 @@ BEGIN TRY
 
     UPDATE dbo.HoaDonThang
     SET TrangThai = 'DA_THANH_TOAN', NgayThanhToan = DATEADD(day, 5, NgayLap),
-        NguoiThu = N'Thu ngan mau'
+        NguoiThu = N'Nguyễn Thị Thu Hà'
     WHERE Thang = 8;
 
     INSERT dbo.ChiTietHoaDon(MaHoaDon, LoaiKhoan, MaVanPhong, MaDichVu, SoLuong, DonGiaApDung, TyLeNgay)
@@ -216,9 +223,9 @@ BEGIN TRY
 
     INSERT dbo.ChiPhiVanHanh(MaToaNha, Thang, Nam, LoaiChiPhi, SoTien, MoTa)
     SELECT tn.MaToaNha, ky.Thang, ky.Nam, chiphi.Loai, chiphi.Tien,
-        CONCAT(N'Chi phi mau thang ', ky.Thang, '/', ky.Nam)
+        CONCAT(N'Chi phí vận hành tháng ', ky.Thang, '/', ky.Nam)
     FROM dbo.ToaNha AS tn CROSS JOIN #Ky AS ky
-    CROSS JOIN (VALUES (N'Dien nuoc', 12000000), (N'Bao tri', 5000000), (N'Vat tu', 3000000)) AS chiphi(Loai, Tien);
+    CROSS JOIN (VALUES (N'Điện nước', 12000000), (N'Bảo trì', 5000000), (N'Vật tư', 3000000)) AS chiphi(Loai, Tien);
 
     IF (SELECT COUNT_BIG(*) FROM dbo.ChiTietSuDungNV) <> 7320
         THROW 51003, N'So log khong dung 7.320. Huy toan bo seed.', 1;
